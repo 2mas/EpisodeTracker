@@ -2,9 +2,9 @@
 
 A Tv-show tracker that uses TheTVDB.com API v2. Search and add series to your trackinglist and get notified when new episodes are aired for your favourite series.
 
-Right now only "valid" episodes are being processed, there are special-episodes and episodes without a correctly formatteded air-date that will be ignored from processing.
+Right now only "valid" episodes are being processed. There are special-episodes and episodes without a correctly formatted air-date that will be ignored from processing.
 
-Feel free to contribute
+Feel free to contribute!
 
 ### How to run ###
 
