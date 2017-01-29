@@ -125,15 +125,23 @@ namespace EpisodeTracker
 
             CheckTokenBeforeApiCall();
 
-            /*
-             * Will take a significant amount of time if there are many tracked objects however.
-             * A way to reduce that is to just make a call to /updated/query wich returns
-             * series that has been updated within a week from now and only process matches,
-             * but then it must be guaranteed to run atleast once a week...
-            */
+            List<Tuple<TrackedItem, Task<List<Episode>>>> tasks = new List<Tuple<TrackedItem, Task<List<Episode>>>>();
+
             foreach (TrackedItem trackedItem in trackedItems)
             {
-                List<Episode> episodes = await this.ApiInteractor.GetEpisodesBySeriesIdAsync(trackedItem.SeriesId);
+                tasks.Add(
+                    new Tuple<TrackedItem, Task<List<Episode>>>(
+                        trackedItem,
+                        this.ApiInteractor.GetEpisodesBySeriesIdAsync(trackedItem.SeriesId))
+                    );
+            }
+
+            await Task.WhenAll(tasks.Select(x => x.Item2).ToArray());
+
+            foreach(var task in tasks)
+            {
+                List<Episode> episodes = task.Item2.Result;
+                var trackedItem = task.Item1;
 
                 if (episodes.Count > trackedItem.TotalAiredEpisodes
                     && trackedItem.TrackingPoint < Convert.ToDateTime(episodes.Last().FirstAired))

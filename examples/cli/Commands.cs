@@ -215,14 +215,24 @@ namespace EpisodeTracker.CLI
         internal static void Update()
         {
             Program.Output.WriteLine("Checking for updates...");
+
+#if DEBUG
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+#endif
+
             List<TrackedItem> seriesWithNewEpisodes = Program.episodeTracker.CheckForNewEpisodesAsync().Result;
+
+#if DEBUG
+            watch.Stop();
+            Program.Output.WriteLine($"Time elapsed: { watch.ElapsedMilliseconds } ms");
+#endif
 
             if (seriesWithNewEpisodes.Count > 0)
             {
                 if (Program.episodeTracker.SendNotifications(seriesWithNewEpisodes))
                 {
                     Program.episodeTracker.UpdateTrackingPoint(seriesWithNewEpisodes);
-                    Program.Output.WriteLine($"{ seriesWithNewEpisodes.Count } series has { seriesWithNewEpisodes.Select(x => x.UnSeenEpisodes).Count() } new episodes. Notifications has been sent");
+                    Program.Output.WriteLine($"{ seriesWithNewEpisodes.Count } series has { seriesWithNewEpisodes.Sum(x => x.UnSeenEpisodes.Count) } new episodes. Notifications has been sent");
                     Program.Output.WriteLine();
                 }
             } else
