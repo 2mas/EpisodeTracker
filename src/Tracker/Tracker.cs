@@ -167,6 +167,11 @@ namespace EpisodeTracker
             return true;
         }
 
+        /// <summary>
+        /// Creates an initial tracking of a series, setting all aired episodes as unseen
+        /// </summary>
+        /// <param name="seriesId"></param>
+        /// <returns></returns>
         public async Task Track(long seriesId)
         {
             if (!this.GetTrackedItems().Exists(d => d.SeriesId == seriesId))
@@ -191,11 +196,12 @@ namespace EpisodeTracker
                 this.StoreModel.TrackedItems.Add(new TrackedItem()
                 {
                     SeriesId = seriesId,
-                    TrackingPoint = episodes.Any() ? episodes.Last().FirstAired : DateTime.MinValue,
+                    TrackingPoint = DateTime.MinValue,
                     Name = seriesToTrack.Name,
                     Status = seriesToTrack.Status,
-                    TotalSeenEpisodes = episodes.Count,
-                    TotalAiredEpisodes = episodes.Count
+                    TotalSeenEpisodes = 0,
+                    TotalAiredEpisodes = episodes.Count,
+                    UnSeenEpisodes = episodes
                 });
 
                 SaveStoreModel();

@@ -112,7 +112,7 @@ namespace EpisodeTracker.CLI
                     table.Write();
 
                     Program.Output.WriteLine();
-                    Program.Output.WriteLine("Use command: --seen {Number} to mark episode as seen");
+                    Program.Output.WriteLine("Use command: --seen {Number} to mark this and earlier episodes as seen");
                     Program.Output.WriteLine();
                 }
             }
@@ -180,35 +180,42 @@ namespace EpisodeTracker.CLI
         }
 
         /// <summary>
-        /// Marks an unseen episode as seen
+        /// Marks an unseen episode and previous episodes as seen
         /// </summary>
         /// <param name="seen"></param>
         internal static void Seen(int number)
         {
-
             var trackedItems = Program.episodeTracker.GetTrackedItems()
                 .Where(x => x.UnSeenEpisodes.Count > 0).ToList(); ;
 
-            if (trackedItems.Count >= number)
+            if (trackedItems.Count > 0)
             {
-                long episodeId = 0;
+                Episode episodeSeenUntil = null;
+
                 int counter = 1;
                 trackedItems.ForEach(
-                            item =>
-                            {
-                                item.UnSeenEpisodes.ForEach(unseen =>
-                                {
-                                    if (counter++ == number)
-                                        episodeId = unseen.Id;
-                                });
-                            }
-                        );
+                    item =>
+                    {
+                        item.UnSeenEpisodes.ForEach(unseen =>
+                        {
+                            if (counter++ == number)
+                                episodeSeenUntil = unseen;
+                        });
+                    }
+                );
 
-                if (episodeId > 0)
-                    Program.episodeTracker.MarkEpisodesAsSeen(new long[] { episodeId });
+                if (episodeSeenUntil != null)
+                {
+                    // get earlier episodes in same series
+                    List<Episode> episodes = trackedItems
+                        .Find(x => x.UnSeenEpisodes.Exists(u => u.Id == episodeSeenUntil.Id))
+                        .UnSeenEpisodes.Where(x => x.FirstAired <= episodeSeenUntil.FirstAired).ToList();
+
+                    Program.episodeTracker.MarkEpisodesAsSeen(episodes.Select(x => x.Id).ToArray());
+                }
             }
 
-            Program.Output.WriteLine("Episode marked as seen");
+            Program.Output.WriteLine("Episode(s) marked as seen");
             Program.Output.WriteLine();
         }
 
