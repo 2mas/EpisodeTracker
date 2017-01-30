@@ -15,50 +15,40 @@ namespace EpisodeTracker
         private const string NotificationSubject = "EpisodeTracker - New episodes";
         private const string NotificationIntroduction = "New episodes available for series: ";
 
-        public bool SendNotifications(StoreModel storeModel, List<TrackedItem> trackedItems)
+        public void SendNotifications(List<TrackedItem> trackedItems)
         {
             if ((NotificationType & NotificationType.Email) == NotificationType.Email)
             {
-                return SendEmail(storeModel, trackedItems);
+                SendEmail(trackedItems);
             }
-
-            return true;
         }
 
-        private static bool SendEmail(StoreModel storeModel, List<TrackedItem> trackedItems)
+        private static void SendEmail(List<TrackedItem> trackedItems)
         {
             List<string> emails = ConfigFile.Settings.NotificationSettings.NotificationEmails.Cast<string>().ToList();
 
-            if (emails.Count() < 1)
-                return true;
+            if (emails.Count() < 1 || trackedItems.Count < 1)
+                return;
 
-            try
+            MailMessage message = new MailMessage();
+
+            emails.ForEach(x => message.To.Add(x));
+            message.Subject = NotificationSubject;
+
+            Func<TrackedItem, string> MakeSeriesSummaryString = (trackedItem) =>
             {
-                MailMessage message = new MailMessage();
+                return trackedItem.Name + ": " + String.Join(
+                        ", ",
+                        trackedItem.UnSeenEpisodes.Select(x => x.ToString())
+                    );
+            };
 
-                emails.ForEach(x => message.To.Add(x));
-                message.Subject = NotificationSubject;
+            StringBuilder mailBody = new StringBuilder(NotificationIntroduction).AppendLine();
+            trackedItems.ForEach(x => mailBody.AppendLine(MakeSeriesSummaryString(x)));
 
-                Func<TrackedItem, string> MakeSeriesSummaryString = (trackedItem) =>
-                {
-                    return trackedItem.Name + ": " + String.Join(
-                            ", ",
-                            trackedItem.UnSeenEpisodes.Select(x => x.ToString())
-                        );
-                };
+            message.Body = mailBody.ToString();
 
-                StringBuilder mailBody = new StringBuilder(NotificationIntroduction).AppendLine();
-                trackedItems.ForEach(x => mailBody.AppendLine(MakeSeriesSummaryString(x)));
-
-                message.Body = mailBody.ToString();
-
-                Client.Send(message);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            Client.Send(message);
         }
     }
 }

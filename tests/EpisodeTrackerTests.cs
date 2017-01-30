@@ -145,8 +145,8 @@ namespace EpisodeTracker.Tests
             });
 
             var seriesWithNewEpisodes = await this.Tracker.CheckForNewEpisodesAsync();
-            if (this.Tracker.SendNotifications(seriesWithNewEpisodes))
-                this.Tracker.UpdateTrackingPoint(seriesWithNewEpisodes);
+            this.Tracker.SendNotifications(seriesWithNewEpisodes);
+            this.Tracker.UpdateTrackingPoint(seriesWithNewEpisodes);
 
             Assert.AreEqual(282671, this.Tracker.StoreModel.TrackedItems.First().UnSeenEpisodes.First().Id);
         }
@@ -198,12 +198,9 @@ namespace EpisodeTracker.Tests
             });
 
             EmailNotifier notifier = new EmailNotifier();
-            var result = notifier.SendNotifications(
-                this.Tracker.StoreModel,
+            notifier.SendNotifications(
                 this.Tracker.StoreModel.TrackedItems
             );
-
-            Assert.IsTrue(result);
         }
     }
 }

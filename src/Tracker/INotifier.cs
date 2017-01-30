@@ -5,6 +5,6 @@ namespace EpisodeTracker
 {
     public interface INotifier
     {
-        bool SendNotifications(StoreModel storeModel, List<TrackedItem> trackedItems);
+        void SendNotifications(List<TrackedItem> trackedItems);
     }
 }

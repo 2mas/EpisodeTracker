@@ -229,12 +229,10 @@ namespace EpisodeTracker.CLI
 
             if (seriesWithNewEpisodes.Count > 0)
             {
-                if (Program.episodeTracker.SendNotifications(seriesWithNewEpisodes))
-                {
-                    Program.episodeTracker.UpdateTrackingPoint(seriesWithNewEpisodes);
-                    Program.Output.WriteLine($"{ seriesWithNewEpisodes.Count } series has { seriesWithNewEpisodes.Sum(x => x.UnSeenEpisodes.Count) } new episodes. Notifications has been sent");
-                    Program.Output.WriteLine();
-                }
+                Program.episodeTracker.SendNotifications(seriesWithNewEpisodes);
+                Program.episodeTracker.UpdateTrackingPoint(seriesWithNewEpisodes);
+                Program.Output.WriteLine($"{ seriesWithNewEpisodes.Count } series has { seriesWithNewEpisodes.Sum(x => x.UnSeenEpisodes.Count) } new episodes. Notifications has been sent");
+                Program.Output.WriteLine();
             } else
             {
                 Program.Output.WriteLine("No new episodes available");

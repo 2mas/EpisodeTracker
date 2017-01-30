@@ -163,15 +163,7 @@ namespace EpisodeTracker
         /// <returns></returns>
         public bool SendNotifications(List<TrackedItem> updatedSeries)
         {
-            try
-            {
-                this.Notifiers.ForEach(x => x.SendNotifications(this.StoreModel, updatedSeries));
-            }
-            catch
-            {
-                return false;
-            }
-
+            this.Notifiers.ForEach(x => x.SendNotifications(updatedSeries));
             return true;
         }
 
