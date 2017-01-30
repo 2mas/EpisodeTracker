@@ -2,36 +2,27 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.IO;
 using System.Net.Http;
 using System.Linq;
 using EpisodeTracker.Tests.Classes;
 using EpisodeTracker.Storage;
-using EpisodeTracker;
 
 namespace EpisodeTracker.Tests
 {
     [TestClass]
-    public class EpisodeTrackerApiTests
+    public class EpisodeTrackerTests
     {
-        private JsonStorage Storage;
         private Tracker Tracker;
 
         [TestInitialize]
         public void Setup()
         {
-            this.Storage = new JsonStorage(
-                Path.Combine(
-                    Path.Combine(Environment.CurrentDirectory, "Data"),
-                        "EpisodeTracker.json")
-                    );
-
             FakeHttpMessageHandler fakeHandler = new FakeHttpMessageHandler();
             FakeHandlerSeeder.Seed(fakeHandler);
 
             this.Tracker = new Tracker(
                     new HttpClient(fakeHandler),
-                    this.Storage,
+                    new InMemoryStorage(),
                     new List<INotifier>() {
                         new EmailNotifier()
                     }
@@ -76,14 +67,6 @@ namespace EpisodeTracker.Tests
             Series series = this.Tracker.ViewSeriesInformationByIdAsync((long)282670).Result;
             Assert.AreEqual("1, 2", series.AiredSeasons);
             Assert.AreEqual(3, series.AiredEpisodes);
-        }
-
-        [TestMethod]
-        public void ViewingTrackedItemsWithNewEpisodes()
-        {
-            this.Tracker.Track(282670).Wait();
-            var trackedItems = this.Tracker.GetTrackedItems();
-            Assert.AreEqual(3, trackedItems.Select(x => x.UnSeenEpisodes).Count());
         }
 
         [TestMethod]
@@ -145,6 +128,7 @@ namespace EpisodeTracker.Tests
             var seriesWithNewEpisodes = await this.Tracker.CheckForNewEpisodesAsync();
 
             Assert.AreEqual(2, seriesWithNewEpisodes.First().TotalAiredEpisodes - seriesWithNewEpisodes.First().TotalSeenEpisodes);
+            Assert.AreEqual(2, seriesWithNewEpisodes.Sum(x => x.UnSeenEpisodes.Count));
         }
 
         [TestMethod]

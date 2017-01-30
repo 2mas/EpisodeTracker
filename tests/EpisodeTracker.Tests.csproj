@@ -60,7 +60,8 @@
   <ItemGroup>
     <Compile Include="Classes\FakeHandlerSeeder.cs" />
     <Compile Include="Classes\FakeHttpMessageHandler.cs" />
-    <Compile Include="EpisodeTrackerApiTests.cs" />
+    <Compile Include="Classes\InMemoryStorage.cs" />
+    <Compile Include="EpisodeTrackerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="JsonStorageTests.cs" />
   </ItemGroup>
