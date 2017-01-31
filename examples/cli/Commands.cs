@@ -91,7 +91,7 @@ namespace EpisodeTracker.CLI
                 }
                 if (type.Trim().ToLower() == "unseen")
                 {
-                    ConsoleTable table = new ConsoleTable("Number", "Series", "Episode", "EpisodeId");
+                    ConsoleTable table = new ConsoleTable("Number", "Series", "Episode", "Aired", "EpisodeId");
                     trackedItems = trackedItems.Where(x => x.UnSeenEpisodes.Count > 0).ToList();
 
                     trackedItems.ForEach(
@@ -103,6 +103,7 @@ namespace EpisodeTracker.CLI
                                         counter++,
                                         item.Name,
                                         unseen.ToString(),
+                                        unseen.FirstAired.ToShortDateString(),
                                         unseen.Id
                                     );
                                 });
