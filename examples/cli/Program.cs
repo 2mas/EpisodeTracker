@@ -29,7 +29,13 @@ namespace EpisodeTracker.CLI
                 // Run as service or schedule etc, no messages printed
                 if (args.Length > 0)
                 {
-                    Program.Output = new NoOutput();
+                    if (args[0] == "--silent")
+                    {
+                        Program.Output = new NoOutput();
+                    } else
+                    {
+                        Program.Output = new ConsoleOutput();
+                    }
                     Commands.Update();
                 } else
                 {
