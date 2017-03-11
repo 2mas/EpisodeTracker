@@ -1,10 +1,11 @@
 ﻿using EpisodeTracker.Storage;
 using System.Collections.Generic;
 
-namespace EpisodeTracker
+namespace EpisodeTracker.Notifier
 {
     public interface INotifier
     {
+        void Setup(StoreModel storeModel);
         void SendNotifications(List<TrackedItem> trackedItems);
     }
 }

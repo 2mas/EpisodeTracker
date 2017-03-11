@@ -1,10 +1,11 @@
 ﻿using EpisodeTracker.Http;
+using EpisodeTracker.Notifier;
 using EpisodeTracker.Storage;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace EpisodeTracker
 {
@@ -22,7 +23,7 @@ namespace EpisodeTracker
         /// <summary>
         /// Storage for tracked series and time-limited API-token
         /// </summary>
-        private IStorage Storage;
+        public IStorage Storage;
 
         /// <summary>
         /// Sends notifications when new episodes are available
@@ -33,11 +34,6 @@ namespace EpisodeTracker
         /// Current token for Api-usage
         /// </summary>
         private JwtToken Token;
-
-        /// <summary>
-        /// Contains data of tracked episodes and usersettings
-        /// </summary>
-        public StoreModel StoreModel { get; private set; }
 
         /// <summary>
         /// Holds temporary data such as previous searchresults
@@ -51,13 +47,32 @@ namespace EpisodeTracker
         /// <param name="httpClient"></param>
         /// <param name="storage">Choice of storage</param>
         /// <param name="notifiers">List of possible ways of getting notified, for example by Email</param>
-        public Tracker(HttpClient httpClient, IStorage storage, List<INotifier> notifiers)
+        public Tracker(HttpClient httpClient, IStorage storage)
         {
-            this.ApiInteractor = new ApiInteractor(httpClient);
             this.Storage = storage;
-            this.Notifiers = notifiers;
-            this.StoreModel = Storage.Load();
+            this.Notifiers = new List<INotifier>();
+
+            // Add notifiers based on user-configuration
+            if (this.Storage.GetStoreModel().NotificationSettings.Configurations.Any())
+            {
+                this.Storage.GetStoreModel().NotificationSettings.Configurations.ForEach(
+                    notificationConfig => 
+                {
+                    if (notificationConfig.GetNotifierType().GetInterface(typeof(INotifier).Name) != null)
+                    {
+                        this.Notifiers.Add((INotifier)Activator.CreateInstance(notificationConfig.GetNotifierType()));
+                    }
+                });
+
+                if (this.Notifiers.Any())
+                {
+                    this.Notifiers.ForEach(x => x.Setup(this.Storage.GetStoreModel()));
+                }
+            }
+
             this.TmpData = new TemporaryData();
+
+            this.ApiInteractor = new ApiInteractor(httpClient, this.Storage.GetStoreModel().ApiCredentials);
 
             // Check for token in storage
             if (HasValidTokenInStorage())
@@ -138,7 +153,7 @@ namespace EpisodeTracker
 
             await Task.WhenAll(tasks.Select(x => x.Item2).ToArray());
 
-            foreach(var task in tasks)
+            foreach (var task in tasks)
             {
                 List<Episode> episodes = task.Item2.Result;
                 var trackedItem = task.Item1;
@@ -156,8 +171,7 @@ namespace EpisodeTracker
         }
 
         /// <summary>
-        /// Sends notifications based on choice in configurationfile
-        /// If success the Storage gets updated with new TrackingPoint and TotalEpisodes
+        /// Sends notifications with configured notifiers
         /// </summary>
         /// <param name="updatedSeries"></param>
         /// <returns></returns>
@@ -179,10 +193,12 @@ namespace EpisodeTracker
                 CheckTokenBeforeApiCall();
                 Series seriesToTrack;
 
-                if (TmpData.LatestSearch != null && TmpData.LatestSearch.Any(d=>d.Id == seriesId)) {
+                if (TmpData.LatestSearch != null && TmpData.LatestSearch.Any(d => d.Id == seriesId))
+                {
                     seriesToTrack = TmpData.LatestSearch.First(d => d.Id == seriesId);
                 }
-                else if(TmpData.LatestViewById?.Id == seriesId) {
+                else if (TmpData.LatestViewById?.Id == seriesId)
+                {
                     seriesToTrack = TmpData.LatestViewById;
                 }
                 else
@@ -193,7 +209,7 @@ namespace EpisodeTracker
                 // Get total count of episodes from this point
                 List<Episode> episodes = await this.ApiInteractor.GetEpisodesBySeriesIdAsync(seriesId);
 
-                this.StoreModel.TrackedItems.Add(new TrackedItem()
+                this.Storage.GetStoreModel().TrackedItems.Add(new TrackedItem()
                 {
                     SeriesId = seriesId,
                     TrackingPoint = DateTime.MinValue,
@@ -212,8 +228,8 @@ namespace EpisodeTracker
         {
             if (this.GetTrackedItems().Exists(d => d.SeriesId == seriesId))
             {
-                TrackedItem item = this.StoreModel.TrackedItems.First(d => d.SeriesId == seriesId);
-                this.StoreModel.TrackedItems.Remove(item);
+                TrackedItem item = this.Storage.GetStoreModel().TrackedItems.First(d => d.SeriesId == seriesId);
+                this.Storage.GetStoreModel().TrackedItems.Remove(item);
             }
 
             SaveStoreModel();
@@ -221,14 +237,14 @@ namespace EpisodeTracker
 
         public List<TrackedItem> GetTrackedItems()
         {
-            return this.StoreModel.TrackedItems.OrderBy(d => d.Name).ToList();
+            return this.Storage.GetStoreModel().TrackedItems.OrderBy(d => d.Name).ToList();
         }
 
         #endregion
 
         public void SaveStoreModel()
         {
-            this.Storage.Save(this.StoreModel);
+            this.Storage.Save(this.Storage.GetStoreModel());
         }
 
         /// <summary>
@@ -259,7 +275,8 @@ namespace EpisodeTracker
         public void UpdateTrackingPoint(List<TrackedItem> hasNewEpisodes)
         {
             hasNewEpisodes.ForEach(
-                x => {
+                x =>
+                {
                     x.TrackingPoint = x.UnSeenEpisodes.Last().FirstAired;
                 }
             );
@@ -287,10 +304,10 @@ namespace EpisodeTracker
         /// <returns></returns>
         private bool HasValidTokenInStorage()
         {
-            if (this.StoreModel.Token != null)
+            if (this.Storage.GetStoreModel().Token != null)
             {
-                return !String.IsNullOrEmpty(this.StoreModel.Token.Token)
-                    && this.StoreModel.Token.Expiration > DateTime.Now;
+                return !String.IsNullOrEmpty(this.Storage.GetStoreModel().Token.Token)
+                    && this.Storage.GetStoreModel().Token.Expiration > DateTime.Now;
             }
 
             return false;
@@ -302,8 +319,8 @@ namespace EpisodeTracker
         private void SetValidTokenFromStorage()
         {
             this.Token = new JwtToken();
-            this.Token.Token = this.StoreModel.Token.Token;
-            this.Token.Expiration = this.StoreModel.Token.Expiration;
+            this.Token.Token = this.Storage.GetStoreModel().Token.Token;
+            this.Token.Expiration = this.Storage.GetStoreModel().Token.Expiration;
 
             this.ApiInteractor.AddTokenToAuthorizationHeader(this.Token);
         }
@@ -314,8 +331,8 @@ namespace EpisodeTracker
         private void GetTokenFromAPI()
         {
             this.Token = this.ApiInteractor.GetTokenAndSetAuthorizationHeadersAsync().Result;
-            this.StoreModel.Token.Token = this.Token.Token;
-            this.StoreModel.Token.Expiration = this.Token.Expiration;
+            this.Storage.GetStoreModel().Token.Token = this.Token.Token;
+            this.Storage.GetStoreModel().Token.Expiration = this.Token.Expiration;
         }
         #endregion
     }

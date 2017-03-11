@@ -20,10 +20,7 @@ namespace EpisodeTracker.CLI
 
             Program.episodeTracker = new Tracker(
                 new System.Net.Http.HttpClient(),
-                storage,
-                new List<INotifier>() {
-                    new EmailNotifier()
-                }
+                storage
             );
         }
     }

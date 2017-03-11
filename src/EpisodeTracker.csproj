@@ -49,27 +49,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration\ConfigFile.cs" />
+    <Compile Include="Exceptions\ApiCredentialException.cs" />
+    <Compile Include="Storage\ApiCredentials.cs" />
+    <Compile Include="Storage\NotificationSettings.cs" />
+    <Compile Include="Storage\NotificationConfig\EmailConfiguration.cs" />
     <Compile Include="Tracker\Episode.cs" />
     <Compile Include="Http\ApiInteractor.cs" />
-    <Compile Include="Tracker\INotifier.cs" />
-    <Compile Include="Tracker\EmailNotifier.cs" />
+    <Compile Include="Notifier\INotifier.cs" />
+    <Compile Include="Notifier\EmailNotifier.cs" />
+    <Compile Include="Storage\NotificationConfig\INotifierConfiguration.cs" />
     <Compile Include="Tracker\Tracker.cs" />
     <Compile Include="Http\JwtToken.cs" />
     <Compile Include="Storage\IStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tracker\Series.cs" />
     <Compile Include="Storage\JsonStorage.cs" />
-    <Compile Include="Configuration\NotificationType.cs" />
     <Compile Include="Storage\StoreModel.cs" />
     <Compile Include="Storage\TrackedItem.cs" />
     <Compile Include="Tracker\TemporaryData.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Configuration\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

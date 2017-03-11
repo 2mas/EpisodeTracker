@@ -1,11 +1,11 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.Linq;
+﻿using EpisodeTracker.Storage;
 using EpisodeTracker.Tests.Classes;
-using EpisodeTracker.Storage;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace EpisodeTracker.Tests
 {
@@ -22,10 +22,7 @@ namespace EpisodeTracker.Tests
 
             this.Tracker = new Tracker(
                     new HttpClient(fakeHandler),
-                    new InMemoryStorage(),
-                    new List<INotifier>() {
-                        new EmailNotifier()
-                    }
+                    new InMemoryStorage()
                 );
         }
 
@@ -40,7 +37,7 @@ namespace EpisodeTracker.Tests
         [TestMethod]
         public async Task RetrievingListOfTrackedSeriesShouldGiveCorrectNumberOfItems()
         {
-            this.Tracker.StoreModel.TrackedItems = new List<TrackedItem>();
+            this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
             await this.Tracker.Track(123);
             await this.Tracker.Track(456);
 
@@ -72,7 +69,7 @@ namespace EpisodeTracker.Tests
         [TestMethod]
         public async Task AddingTrackedSeriesShouldShowUpInStoreModel()
         {
-            this.Tracker.StoreModel.TrackedItems = new List<TrackedItem>();
+            this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
             await this.Tracker.Track(123);
             Assert.IsTrue(this.Tracker.GetTrackedItems().Any(d => d.SeriesId == 123));
         }
@@ -88,7 +85,7 @@ namespace EpisodeTracker.Tests
         [TestMethod]
         public async Task AddingDuplicateTrackedSeriesShouldBeIgnored()
         {
-            this.Tracker.StoreModel.TrackedItems = new List<TrackedItem>();
+            this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
             await this.Tracker.Track(123);
             await this.Tracker.Track(123);
             Assert.IsTrue(this.Tracker.GetTrackedItems().Count(d => d.SeriesId == 123) == 1);
@@ -115,8 +112,8 @@ namespace EpisodeTracker.Tests
         [TestMethod]
         public async Task AfterRetrievingNewEpisodeInformationAboutTrackedItemANotificationShouldBeSentAndTotalEpisodesUpdated()
         {
-            this.Tracker.StoreModel.TrackedItems = new List<TrackedItem>();
-            this.Tracker.StoreModel.TrackedItems.Add(new TrackedItem()
+            this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
+            this.Tracker.Storage.GetStoreModel().TrackedItems.Add(new TrackedItem()
             {
                 SeriesId = 282670,
                 Name = "Narcos",
@@ -134,8 +131,8 @@ namespace EpisodeTracker.Tests
         [TestMethod]
         public async Task AfterRetrievingNewEpisodeInformationAboutTrackedItemTheNewEpisodeShouldShowUpInUnseenEpisodesInStoreModel()
         {
-            this.Tracker.StoreModel.TrackedItems = new List<TrackedItem>();
-            this.Tracker.StoreModel.TrackedItems.Add(new TrackedItem()
+            this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
+            this.Tracker.Storage.GetStoreModel().TrackedItems.Add(new TrackedItem()
             {
                 SeriesId = 282670,
                 Name = "Narcos",
@@ -148,7 +145,7 @@ namespace EpisodeTracker.Tests
             this.Tracker.SendNotifications(seriesWithNewEpisodes);
             this.Tracker.UpdateTrackingPoint(seriesWithNewEpisodes);
 
-            Assert.AreEqual(282671, this.Tracker.StoreModel.TrackedItems.First().UnSeenEpisodes.First().Id);
+            Assert.AreEqual(282671, this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes.First().Id);
         }
 
         [TestMethod]
@@ -164,8 +161,8 @@ namespace EpisodeTracker.Tests
                 SeasonId = 123
             });
 
-            this.Tracker.StoreModel.TrackedItems = new List<TrackedItem>();
-            this.Tracker.StoreModel.TrackedItems.Add(new TrackedItem()
+            this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
+            this.Tracker.Storage.GetStoreModel().TrackedItems.Add(new TrackedItem()
             {
                 SeriesId = 282670,
                 Name = "Narcos",
@@ -175,19 +172,19 @@ namespace EpisodeTracker.Tests
                 UnSeenEpisodes = unSeenEpisodes
             });
 
-            Assert.AreEqual(1, this.Tracker.StoreModel.TrackedItems.First().UnSeenEpisodes.Count);
+            Assert.AreEqual(1, this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes.Count);
 
             this.Tracker.MarkEpisodesAsSeen(new long[] { 321 });
 
-            Assert.AreEqual(0, this.Tracker.StoreModel.TrackedItems.First().UnSeenEpisodes.Count);
-            Assert.AreEqual(2, this.Tracker.StoreModel.TrackedItems.First().TotalSeenEpisodes);
+            Assert.AreEqual(0, this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes.Count);
+            Assert.AreEqual(2, this.Tracker.Storage.GetStoreModel().TrackedItems.First().TotalSeenEpisodes);
         }
 
         [TestMethod]
         public void SendingEmailNotification()
         {
-            this.Tracker.StoreModel.TrackedItems = new List<TrackedItem>();
-            this.Tracker.StoreModel.TrackedItems.Add(new TrackedItem()
+            this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
+            this.Tracker.Storage.GetStoreModel().TrackedItems.Add(new TrackedItem()
             {
                 SeriesId = 282670,
                 Name = "Narcos",
@@ -197,10 +194,7 @@ namespace EpisodeTracker.Tests
                 UnSeenEpisodes = new List<Episode>()
             });
 
-            EmailNotifier notifier = new EmailNotifier();
-            notifier.SendNotifications(
-                this.Tracker.StoreModel.TrackedItems
-            );
+            this.Tracker.SendNotifications(this.Tracker.Storage.GetStoreModel().TrackedItems);
         }
     }
 }

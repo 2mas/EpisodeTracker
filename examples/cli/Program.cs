@@ -22,33 +22,40 @@ namespace EpisodeTracker.CLI
 
         static int Main(string[] args)
         {
+            if (args.Length > 0)
+            {
+                if (args[0] == "--silent")
+                {
+                    Program.Output = new NoOutput();
+                }
+                else
+                {
+                    Program.Output = new ConsoleOutput();
+                }
+            }
+            else
+            {
+                Program.Output = new ConsoleOutput();
+            }
+
             try
             {
                 Bootstrap.Initialize();
-
+                
                 // Run as service or schedule etc, no messages printed
                 if (args.Length > 0)
-                {
-                    if (args[0] == "--silent")
-                    {
-                        Program.Output = new NoOutput();
-                    } else
-                    {
-                        Program.Output = new ConsoleOutput();
-                    }
+                {   
                     Commands.Update();
                 } else
                 {
-                    Program.Output = new ConsoleOutput();
                     Run();
                 }
                 Environment.ExitCode = 0;
             }
             catch (Exception e)
             {
-                Program.Output.Write(e.Message);
+                Program.Output.WriteLine(e.Message);
                 Environment.ExitCode = 1;
-                throw e;
             }
 
             return Environment.ExitCode;

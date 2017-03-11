@@ -26,7 +26,7 @@ namespace EpisodeTracker.Tests
         [TestMethod]
         public void LoadingJsonStorageShouldReturnAStoreModel()
         {
-            var storeModel = this.Storage.Load();
+            var storeModel = this.Storage.GetStoreModel();
             Assert.IsInstanceOfType(storeModel, typeof(StoreModel));
         }
 
@@ -53,7 +53,7 @@ namespace EpisodeTracker.Tests
             );
 
             this.Storage.Save(storeModel);
-            StoreModel storeModelLoaded = this.Storage.Load();
+            StoreModel storeModelLoaded = this.Storage.GetStoreModel();
 
             // For comparison, only public properties
             string jsonStoreModel = JsonConvert.SerializeObject(storeModel);

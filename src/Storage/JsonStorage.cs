@@ -9,32 +9,39 @@ namespace EpisodeTracker.Storage
     {
         private readonly string JsonFile;
 
+        private StoreModel StoreModel;
+
         public JsonStorage(string jsonFile)
         {
             JsonFile = jsonFile;
             EnsureExistingFile();
+            Load();
         }
 
-        public StoreModel Load()
+        private void Load()
         {
-            StoreModel storeModel = new StoreModel();
+            this.StoreModel = new StoreModel();
 
             using (StreamReader r = new StreamReader(JsonFile, Encoding.UTF8))
             {
                 string json = r.ReadToEnd();
                 if (!String.IsNullOrEmpty(json))
                 {
-                    storeModel = JsonConvert.DeserializeObject<StoreModel>(json);
+                    this.StoreModel = JsonConvert.DeserializeObject<StoreModel>(json);
                 }
             }
+        }
 
-            return storeModel;
+        public StoreModel GetStoreModel()
+        {
+            return this.StoreModel;
         }
 
         public void Save(StoreModel storeModel)
         {
             string json = JsonConvert.SerializeObject(storeModel, Formatting.Indented);
             File.WriteAllText(JsonFile, json, Encoding.UTF8);
+            this.StoreModel = storeModel;
         }
 
         private void EnsureExistingFile()
@@ -52,6 +59,9 @@ namespace EpisodeTracker.Storage
             FileInfo fileInfo = new FileInfo(JsonFile);
             Directory.CreateDirectory(fileInfo.Directory.FullName);
             File.Create(JsonFile).Close();
+
+            // Save a skeleton model
+            Save(new StoreModel());
         }
     }
 }

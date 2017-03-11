@@ -1,12 +1,11 @@
-﻿using EpisodeTracker.Configuration;
+﻿using EpisodeTracker.Storage;
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using EpisodeTracker;
 
 namespace EpisodeTracker.Http
 {
@@ -18,16 +17,28 @@ namespace EpisodeTracker.Http
         #region members
         private static HttpClient Client;
 
+        private static ApiCredentials ApiCredentials;
+
         /// <summary>
         /// Jwt-token validity
         /// </summary>
         private readonly TimeSpan tokenExpiration = new TimeSpan(24, 0, 0);
         #endregion
 
-        public ApiInteractor(HttpClient client)
+        public ApiInteractor(HttpClient client, ApiCredentials apiCredentials)
         {
+            ApiCredentials = apiCredentials;
+
+            if (!ApiCredentials.IsValid)
+            {
+                throw new Exceptions.ApiCredentialException(
+                    "Invalid ApiCredentials, please set credentials in configfile. See Inner Exception for details",
+                    new FormatException(String.Join(", ", ApiCredentials.GetValidationErrors().ToArray()))
+                );
+            }
+
             Client = client;
-            Client.BaseAddress = ConfigFile.Settings.ApiSettings.ApiUrl;
+            Client.BaseAddress = new Uri(ApiCredentials.ApiUrl);
             Client.DefaultRequestHeaders.Accept.Clear();
             Client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json")
@@ -50,7 +61,7 @@ namespace EpisodeTracker.Http
             response.EnsureSuccessStatusCode();
 
             dynamic responseObject = await response.Content.ReadAsAsync<ExpandoObject>();
-            foreach(var hit in responseObject.data)
+            foreach (var hit in responseObject.data)
             {
                 searchHits.Add(new Series
                 {
@@ -109,7 +120,7 @@ namespace EpisodeTracker.Http
             //links: first, last, next, prev
             if (responseObject.links.next != null)
             {
-                episodes.AddRange(await GetEpisodesBySeriesIdAsync(id, (int) responseObject.links.next, includeSpecials));
+                episodes.AddRange(await GetEpisodesBySeriesIdAsync(id, (int)responseObject.links.next, includeSpecials));
             }
 
             episodes = episodes.OrderBy(x => x.FirstAired).ToList();
@@ -156,9 +167,9 @@ namespace EpisodeTracker.Http
         {
             object Auth = new
             {
-                apikey = ConfigFile.Settings.ApiSettings.ApiKey,
-                username = ConfigFile.Settings.ApiSettings.ApiUser,
-                userkey = ConfigFile.Settings.ApiSettings.ApiUserKey
+                apikey = ApiCredentials.ApiKey,
+                username = ApiCredentials.ApiUser,
+                userkey = ApiCredentials.ApiUserkey
             };
 
             HttpResponseMessage response = await Client.PostAsJsonAsync("login", Auth);
