@@ -27,7 +27,10 @@ namespace EpisodeTracker.Storage
                 string json = r.ReadToEnd();
                 if (!String.IsNullOrEmpty(json))
                 {
-                    this.StoreModel = JsonConvert.DeserializeObject<StoreModel>(json);
+                    this.StoreModel = JsonConvert.DeserializeObject<StoreModel>(json, new JsonSerializerSettings
+                    {
+                        TypeNameHandling = TypeNameHandling.Objects
+                    });
                 }
             }
         }
@@ -39,7 +42,16 @@ namespace EpisodeTracker.Storage
 
         public void Save(StoreModel storeModel)
         {
-            string json = JsonConvert.SerializeObject(storeModel, Formatting.Indented);
+            string json = JsonConvert.SerializeObject(
+                storeModel, 
+                Formatting.Indented, 
+                new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Objects,
+                    TypeNameAssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple
+                }
+            );
+
             File.WriteAllText(JsonFile, json, Encoding.UTF8);
             this.StoreModel = storeModel;
         }

@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Exceptions\ApiCredentialException.cs" />
     <Compile Include="Storage\ApiCredentials.cs" />
+    <Compile Include="Storage\NotificationConfig\NotificationConfigHelper.cs" />
     <Compile Include="Storage\NotificationSettings.cs" />
     <Compile Include="Storage\NotificationConfig\EmailConfiguration.cs" />
     <Compile Include="Tracker\Episode.cs" />
@@ -71,9 +72,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Configuration\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

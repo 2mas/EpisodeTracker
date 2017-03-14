@@ -1,5 +1,6 @@
 ﻿using EpisodeTracker.CLI.Output;
 using System;
+using System.Linq;
 
 namespace EpisodeTracker.CLI
 {
@@ -66,6 +67,8 @@ namespace EpisodeTracker.CLI
             Program.Output.WriteLine("Welcome to  EpisodeTracker, type -h/--help for help or q/quit to quit");
             Program.Output.WriteLine();
 
+            ShowConfigSuggestions();
+            
             string input;
             while (!ShouldExit)
             {
@@ -78,6 +81,21 @@ namespace EpisodeTracker.CLI
 
                 Options options = new Options();
                 ParseCommand(input.Split(new char[] { ' ' }, 2), options);
+            }
+        }
+
+        private static void ShowConfigSuggestions()
+        {
+            if (!Program.episodeTracker.Storage.GetStoreModel().ApiCredentials.IsValid)
+            {
+                Program.Output.WriteLine("Your ApiCredentials are not yet set, please provide these in configuration before use");
+                Program.Output.WriteLine();
+            }
+
+            if (!Program.episodeTracker.Storage.GetStoreModel().NotificationSettings.Configurations.Any())
+            {
+                Program.Output.WriteLine("You have no notifications set up, provide these in configuration to recieve notification when new releases are available");
+                Program.Output.WriteLine();
             }
         }
 
@@ -113,6 +131,9 @@ namespace EpisodeTracker.CLI
 
                 if (options.Update > 0)
                     Commands.Update();
+
+                if (!String.IsNullOrEmpty(options.Configuration))
+                    Commands.Configuration(options.Configuration);
             }
         }
     }

@@ -47,7 +47,7 @@ namespace EpisodeTracker.Notifier
                     Configuration.Password
                 );
 
-            Recipients = Configuration.Recipients;
+            Configuration.Recipients.ForEach(r => Recipients.Add(new MailAddress(r)));
         }
 
         public void SendNotifications(List<TrackedItem> trackedItems)
@@ -73,6 +73,6 @@ namespace EpisodeTracker.Notifier
             message.Body = mailBody.ToString();
 
             Client.Send(message);
-        }        
+        }
     }
 }

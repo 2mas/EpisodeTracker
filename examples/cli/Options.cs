@@ -41,6 +41,10 @@ namespace EpisodeTracker.CLI
           HelpText = "--update {1} to run updatecheck for new episodes.")]
         public int Update { get; set; }
 
+        [Option("config", Required = false,
+          HelpText = "--config list | add to view current config or add a new config-element such as a notifier.")]
+        public string Configuration { get; set; }
+
         [HelpOption]
         public string GetUsage()
         {

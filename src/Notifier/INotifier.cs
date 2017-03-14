@@ -1,4 +1,5 @@
 ﻿using EpisodeTracker.Storage;
+using System;
 using System.Collections.Generic;
 
 namespace EpisodeTracker.Notifier

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using EpisodeTracker.Storage;
 using EpisodeTracker;
+using EpisodeTracker.Storage.NotificationConfig;
 
 namespace EpisodeTracker.CLI
 {
@@ -13,7 +14,14 @@ namespace EpisodeTracker.CLI
         internal static void Search(string searchString)
         {
             List<Series> result = new List<Series>();
-            result = Program.episodeTracker.SearchSeriesAsync(searchString).Result;
+            try
+            {
+                result = Program.episodeTracker.SearchSeriesAsync(searchString).Result;
+            }
+            catch (Exception e)
+            {
+                Program.Output.WriteLine(e.Message);
+            }
             var trackedItems = Program.episodeTracker.GetTrackedItems();
 
             if (result.Count > 0)
@@ -124,6 +132,94 @@ namespace EpisodeTracker.CLI
             }
         }
 
+        internal static void Configuration(string configuration)
+        {
+            if (configuration.Length < 3
+                || !(configuration.ToLower() == "list")
+                && !configuration.ToLower().Contains("add"))
+            {
+                Program.Output.WriteLine("Possible configuration-arguments: list | add {ConfigurationClass}");
+                Program.Output.WriteLine();
+                return;
+            } else
+            {
+                var storeModel = Program.episodeTracker.Storage.GetStoreModel();
+
+                if (configuration.ToLower() == "list")
+                {
+                    Program.Output.WriteLine("Listing configuration, keys and values");
+                    Program.Output.WriteLine("-------------------------------------");
+                    Program.Output.WriteLine();
+                    
+                    var apiCredentials = storeModel.ApiCredentials;
+
+                    Program.Output.WriteLine("# ApiCredentials");
+                    Program.Output.WriteLine();
+                    Program.Output.WriteLine($"ApiUrl = {apiCredentials.ApiUrl}");
+                    Program.Output.WriteLine($"ApiKey = {apiCredentials.ApiKey}");
+                    Program.Output.WriteLine($"ApiUser = {apiCredentials.ApiUser}");
+                    Program.Output.WriteLine($"ApiUserkey = {apiCredentials.ApiUserkey}");
+                    Program.Output.WriteLine();
+
+                    var notificationConfigurations = storeModel.NotificationSettings.Configurations;
+
+                    Program.Output.WriteLine("# NotificationConfigurations");
+                    
+                    var implementations = NotificationConfigHelper.GetINotifierImplementationTypes();
+
+                    string notifierConfigNames = String.Join(", ", implementations.Select(i => i.Name));
+
+                    Program.Output.Write($"Available notifiers: {notifierConfigNames}. Use --config add 'notifier config name' to add one");
+                    Program.Output.WriteLine();
+                    
+                    notificationConfigurations.ForEach(config =>
+                    {
+                        var properties = config.GetType().GetProperties(System.Reflection.BindingFlags.Public).ToList();
+
+                        Program.Output.WriteLine(config.GetNotifierType().Name);
+                        properties.ForEach(p =>
+                        {
+                            Program.Output.WriteLine($"{p.Name}={p.GetValue(p.Name)}");
+                        });
+                        
+                        Program.Output.WriteLine();
+                    });
+                }
+                if (configuration.Substring(0, 3).ToLower() == "add")
+                {
+                    var addCommand = configuration.Substring(4, configuration.Length - 4);
+
+                    var implementations = NotificationConfigHelper.GetINotifierImplementationTypes();
+
+                    string notifierConfigNames = String.Join(", ", implementations.Select(i => i.Name));
+
+                    if (!implementations.Any(i => i.Name == addCommand))
+                    {
+                        Program.Output.Write($"Available notifiers: {notifierConfigNames}. Use --config add notifiername to add one");
+                        Program.Output.WriteLine();
+                    } else
+                    {
+                        var notifierConfigType = implementations.First(i => i.Name == addCommand);                        
+                        var configElement = Activator.CreateInstance(notifierConfigType);
+
+                        if (!storeModel.NotificationSettings.Configurations.Any(c => c.GetType() == notifierConfigType))
+                        {
+                            storeModel.NotificationSettings.Configurations.Add((INotifierConfiguration)configElement);
+
+                            Program.episodeTracker.SaveStoreModel();
+
+                            Program.Output.Write($"{addCommand} added, please provide correct parameters in json-settings");
+                            Program.Output.WriteLine();
+                        } else
+                        {
+                            Program.Output.Write($"{addCommand} already exists.");
+                            Program.Output.WriteLine();
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Marks a series as seen, or all series
         /// </summary>
@@ -224,27 +320,31 @@ namespace EpisodeTracker.CLI
         {
             Program.Output.WriteLine("Checking for updates...");
 
-#if DEBUG
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-#endif
-
-            List<TrackedItem> seriesWithNewEpisodes = Program.episodeTracker.CheckForNewEpisodesAsync().Result;
-
-#if DEBUG
-            watch.Stop();
-            Program.Output.WriteLine($"Time elapsed: { watch.ElapsedMilliseconds } ms");
-#endif
-
-            if (seriesWithNewEpisodes.Count > 0)
+            try
             {
-                Program.episodeTracker.SendNotifications(seriesWithNewEpisodes);
-                Program.episodeTracker.UpdateTrackingPoint(seriesWithNewEpisodes);
-                Program.Output.WriteLine($"{ seriesWithNewEpisodes.Count } series has { seriesWithNewEpisodes.Sum(x => x.UnSeenEpisodes.Count) } new episodes. Notifications has been sent");
-                Program.Output.WriteLine();
-            } else
+#if DEBUG
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+#endif
+                List<TrackedItem> seriesWithNewEpisodes = Program.episodeTracker.CheckForNewEpisodesAsync().Result;            
+#if DEBUG
+                watch.Stop();
+                Program.Output.WriteLine($"Time elapsed: { watch.ElapsedMilliseconds } ms");
+#endif
+                if (seriesWithNewEpisodes.Count > 0)
+                {
+                    Program.episodeTracker.SendNotifications(seriesWithNewEpisodes);
+                    Program.episodeTracker.UpdateTrackingPoint(seriesWithNewEpisodes);
+                    Program.Output.WriteLine($"{ seriesWithNewEpisodes.Count } series has { seriesWithNewEpisodes.Sum(x => x.UnSeenEpisodes.Count) } new episodes. Notifications has been sent");
+                    Program.Output.WriteLine();
+                } else
+                {
+                    Program.Output.WriteLine("No new episodes available");
+                    Program.Output.WriteLine();
+                }
+            }
+            catch (OperationCanceledException)
             {
-                Program.Output.WriteLine("No new episodes available");
-                Program.Output.WriteLine();
+                Program.Output.WriteLine("The operation was cancelled...");
             }
         }
 

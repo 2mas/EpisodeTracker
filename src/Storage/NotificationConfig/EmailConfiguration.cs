@@ -1,4 +1,5 @@
 ﻿using EpisodeTracker.Notifier;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Mail;
@@ -25,7 +26,12 @@ namespace EpisodeTracker.Storage.NotificationConfig
 
         public string UserName { get; set; }
 
-        public List<MailAddress> Recipients { get; set; }
+        public List<string> Recipients { get; set; }
+
+        public EmailConfiguration()
+        {
+            this.Recipients = new List<string>();
+        }
 
         /// <summary>
         /// Associated Notifier-implementation

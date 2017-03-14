@@ -1,6 +1,7 @@
 ﻿using System;
 using EpisodeTracker.Storage;
 using EpisodeTracker.Storage.NotificationConfig;
+using System.Collections.Generic;
 
 namespace EpisodeTracker.Tests.Classes
 {
@@ -10,8 +11,7 @@ namespace EpisodeTracker.Tests.Classes
 
         public InMemoryStorage()
         {
-            var Recipients = new System.Collections.Generic.List<System.Net.Mail.MailAddress>();
-            Recipients.Add(new System.Net.Mail.MailAddress("thomas.welen@gmail.com"));
+            var Recipients =  new List<string>() { "thomas.welen@gmail.com" };
 
             this.StoreModel = new StoreModel
             {
