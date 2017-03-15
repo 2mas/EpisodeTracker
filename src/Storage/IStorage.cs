@@ -2,7 +2,8 @@
 {
     public interface IStorage
     {
-        void Save(StoreModel model);
+        void Save();
         StoreModel GetStoreModel();
+        void SetStoreModel(StoreModel storeModel);
     }
 }

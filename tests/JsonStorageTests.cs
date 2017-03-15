@@ -52,7 +52,8 @@ namespace EpisodeTracker.Tests
                 }
             );
 
-            this.Storage.Save(storeModel);
+            this.Storage.SetStoreModel(storeModel);
+            this.Storage.Save();
             StoreModel storeModelLoaded = this.Storage.GetStoreModel();
 
             // For comparison, only public properties

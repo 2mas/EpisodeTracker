@@ -244,7 +244,7 @@ namespace EpisodeTracker
 
         public void SaveStoreModel()
         {
-            this.Storage.Save(this.Storage.GetStoreModel());
+            this.Storage.Save();
         }
 
         /// <summary>

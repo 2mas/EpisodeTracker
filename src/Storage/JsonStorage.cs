@@ -16,6 +16,12 @@ namespace EpisodeTracker.Storage
             JsonFile = jsonFile;
             EnsureExistingFile();
             Load();
+
+            /* Save this once per startup 
+             * in case of new elements exists in configuration 
+             * wich needs to be manually set
+             **/
+            Save();
         }
 
         private void Load()
@@ -40,10 +46,10 @@ namespace EpisodeTracker.Storage
             return this.StoreModel;
         }
 
-        public void Save(StoreModel storeModel)
+        public void Save()
         {
             string json = JsonConvert.SerializeObject(
-                storeModel, 
+                this.StoreModel, 
                 Formatting.Indented, 
                 new JsonSerializerSettings
                 {
@@ -53,6 +59,10 @@ namespace EpisodeTracker.Storage
             );
 
             File.WriteAllText(JsonFile, json, Encoding.UTF8);
+        }
+
+        public void SetStoreModel(StoreModel storeModel)
+        {
             this.StoreModel = storeModel;
         }
 
@@ -70,10 +80,7 @@ namespace EpisodeTracker.Storage
         {
             FileInfo fileInfo = new FileInfo(JsonFile);
             Directory.CreateDirectory(fileInfo.Directory.FullName);
-            File.Create(JsonFile).Close();
-
-            // Save a skeleton model
-            Save(new StoreModel());
+            File.Create(JsonFile).Close();            
         }
     }
 }

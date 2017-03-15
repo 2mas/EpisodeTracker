@@ -48,8 +48,13 @@ namespace EpisodeTracker.Tests.Classes
             return this.StoreModel;
         }
 
-        public void Save(StoreModel model)
+        public void Save()
         {
+        }
+
+        public void SetStoreModel(StoreModel storeModel)
+        {
+            throw new NotImplementedException();
         }
     }
 }
