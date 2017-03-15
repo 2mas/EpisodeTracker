@@ -14,14 +14,9 @@ namespace EpisodeTracker.CLI
         internal static void Search(string searchString)
         {
             List<Series> result = new List<Series>();
-            try
-            {
-                result = Program.episodeTracker.SearchSeriesAsync(searchString).Result;
-            }
-            catch (Exception e)
-            {
-                Program.Output.WriteLine(e.Message);
-            }
+
+            result = Program.episodeTracker.SearchSeriesAsync(searchString).Result;
+
             var trackedItems = Program.episodeTracker.GetTrackedItems();
 
             if (result.Count > 0)

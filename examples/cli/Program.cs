@@ -53,6 +53,12 @@ namespace EpisodeTracker.CLI
                 }
                 Environment.ExitCode = 0;
             }
+            catch (Exceptions.ApiCredentialException e)
+            {
+                Program.Output.WriteLine(e.Message);
+                Program.Output.WriteLine(e.InnerException.Message);
+                Environment.ExitCode = 1;
+            }
             catch (Exception e)
             {
                 Program.Output.WriteLine(e.Message);
