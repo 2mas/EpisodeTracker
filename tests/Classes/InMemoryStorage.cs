@@ -21,19 +21,6 @@ namespace EpisodeTracker.Tests.Classes
                     ApiKey = "ApiKey",
                     ApiUser = "ApiUser",
                     ApiUserkey = "ApiUserKey"
-                },
-                NotificationSettings = new NotificationSettings
-                {
-                    Configurations = new System.Collections.Generic.List<INotifierConfiguration>()
-                    {
-                        new EmailConfiguration
-                        {
-                            DeliveryMethod = System.Net.Mail.SmtpDeliveryMethod.SpecifiedPickupDirectory,
-                            PickupDirectoryLocation = @"C:\Downloads\kod\net\EpisodeTracker\TestResults\TestMails\",
-                            From = "thomas.welen@gmail.com",
-                            Recipients = Recipients
-                        }
-                    }
                 }
             };
         }

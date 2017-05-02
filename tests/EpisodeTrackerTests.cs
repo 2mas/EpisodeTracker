@@ -110,7 +110,7 @@ namespace EpisodeTracker.Tests
         }
 
         [TestMethod]
-        public async Task AfterRetrievingNewEpisodeInformationAboutTrackedItemANotificationShouldBeSentAndTotalEpisodesUpdated()
+        public async Task AfterRetrievingNewEpisodeInformationAboutTrackedItemTotalEpisodesUpdates()
         {
             this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
             this.Tracker.Storage.GetStoreModel().TrackedItems.Add(new TrackedItem()
@@ -178,23 +178,6 @@ namespace EpisodeTracker.Tests
 
             Assert.AreEqual(0, this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes.Count);
             Assert.AreEqual(2, this.Tracker.Storage.GetStoreModel().TrackedItems.First().TotalSeenEpisodes);
-        }
-
-        [TestMethod]
-        public void SendingEmailNotification()
-        {
-            this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
-            this.Tracker.Storage.GetStoreModel().TrackedItems.Add(new TrackedItem()
-            {
-                SeriesId = 282670,
-                Name = "Narcos",
-                TotalSeenEpisodes = 240,
-                TrackingPoint = DateTime.Now.AddDays(-1),
-                Status = "Continuing",
-                UnSeenEpisodes = new List<Episode>()
-            });
-
-            this.Tracker.SendNotifications(this.Tracker.Storage.GetStoreModel().TrackedItems);
         }
     }
 }
