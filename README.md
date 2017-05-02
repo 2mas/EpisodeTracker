@@ -11,21 +11,19 @@ Feel free to contribute!
 To run this you need
 
 1. Your own api-keys at TheTVDB.com
-2. Modify smtp.config and episodeTracker.config with your setup
+2. Run CLI to make a skeleton config in Data-folder
+2. Modify Data/EpisodeTracker.json with your api credentials and endpoint to the api
 
-episodeTracker.config should contain, for example:
-```
-<episodeTracker>
-    <notificationSettings notificationType="Email/None" notificationEmails="comma-separated list of emails" />
-    <apiSettings apiUrl="https://api.thetvdb.com/" apiKey="" apiUser="" apiUserKey="" />
-</episodeTracker>
-```
+Example of ApiCredentials-element:
 
-smtp.config should contain your smtp-config if Email is chosen as notificationType, for example in testing:
 ```
-<smtp deliveryMethod="SpecifiedPickupDirectory" from="sender@episodetracker">
-    <specifiedPickupDirectory pickupDirectoryLocation="C:\tmp\"/>
-</smtp>
+"ApiCredentials": {
+    "$type": "EpisodeTracker.Storage.ApiCredentials, EpisodeTracker",
+    "ApiUrl": "https://api.thetvdb.com/",
+    "ApiKey": "",
+    "ApiUser": "",
+    "ApiUserkey": ""
+  }
 ```
 
 ### Examples ###
