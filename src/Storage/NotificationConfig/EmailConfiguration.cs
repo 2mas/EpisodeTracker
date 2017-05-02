@@ -1,17 +1,11 @@
 ﻿using EpisodeTracker.Notifier;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Net.Mail;
 
 namespace EpisodeTracker.Storage.NotificationConfig
 {
     public class EmailConfiguration : INotifierConfiguration
     {
-        public SmtpDeliveryMethod DeliveryMethod { get; set; }
-
-        public string PickupDirectoryLocation { get; set; }
-
         public string From { get; set; }
 
         public bool DefaultCredentials { get; set; }

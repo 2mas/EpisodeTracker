@@ -3,7 +3,9 @@ using EpisodeTracker.Storage.NotificationConfig;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MailKit;
+using MimeKit;
 using System.Text;
 
 namespace EpisodeTracker.Notifier
@@ -11,8 +13,7 @@ namespace EpisodeTracker.Notifier
     public class EmailNotifier : INotifier
     {
         public static EmailConfiguration Configuration;
-        private static SmtpClient Client;
-        private static List<MailAddress> Recipients = new List<MailAddress>();
+        private static List<MailboxAddress> Recipients = new List<MailboxAddress>();
         private const string NotificationSubject = "EpisodeTracker - New episodes";
         private const string NotificationIntroduction = "New episodes available for series: ";
 
@@ -33,21 +34,7 @@ namespace EpisodeTracker.Notifier
             Configuration = (EmailConfiguration)storeModel.NotificationSettings.Configurations
                 .Find(c => c.GetType() == typeof(EmailConfiguration));
 
-            Client = new SmtpClient(Configuration.Host, Configuration.Port)
-            {
-                PickupDirectoryLocation = Configuration.PickupDirectoryLocation,
-                DeliveryMethod = Configuration.DeliveryMethod,
-                EnableSsl = Configuration.EnableSsl,
-                UseDefaultCredentials = Configuration.DefaultCredentials
-            };
-
-            if (!Client.UseDefaultCredentials)
-                Client.Credentials = new System.Net.NetworkCredential(
-                    Configuration.UserName, 
-                    Configuration.Password
-                );
-
-            Configuration.Recipients.ForEach(r => Recipients.Add(new MailAddress(r)));
+            Configuration.Recipients.ForEach(r => Recipients.Add(new MailboxAddress(r)));
         }
 
         public void SendNotifications(List<TrackedItem> trackedItems)
@@ -63,16 +50,34 @@ namespace EpisodeTracker.Notifier
                     );
             };
 
-            MailMessage message = new MailMessage();
-            message.From = new MailAddress(Configuration.From);
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(Configuration.From));
             Recipients.ForEach(x => message.To.Add(x));
             message.Subject = NotificationSubject;
 
             StringBuilder mailBody = new StringBuilder(NotificationIntroduction).AppendLine();
             trackedItems.ForEach(x => mailBody.AppendLine(MakeSeriesSummaryString(x)));
-            message.Body = mailBody.ToString();
+            message.Body = new TextPart("plain")
+            {
+                Text = mailBody.ToString()
+            };
 
-            Client.Send(message);
+            using (var client = new SmtpClient())
+            {
+                // For demo-purposes, accept all SSL certificates (in case the server supports STARTTLS)
+                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                client.Connect(Configuration.Host, Configuration.Port, false);
+                client.AuthenticationMechanisms.Remove("XOAUTH2");
+
+                if (!Configuration.DefaultCredentials)
+                {
+                    client.Authenticate(Configuration.UserName, Configuration.Password);
+                }
+
+                client.Send(message);
+                client.Disconnect(true);
+            }
+
         }
     }
 }
