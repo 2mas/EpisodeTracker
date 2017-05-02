@@ -49,12 +49,12 @@ namespace EpisodeTracker.Storage
         public void Save()
         {
             string json = JsonConvert.SerializeObject(
-                this.StoreModel, 
-                Formatting.Indented, 
+                this.StoreModel,
+                Formatting.Indented,
                 new JsonSerializerSettings
                 {
                     TypeNameHandling = TypeNameHandling.Objects,
-                    TypeNameAssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple
+                    TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple
                 }
             );
 
@@ -80,7 +80,7 @@ namespace EpisodeTracker.Storage
         {
             FileInfo fileInfo = new FileInfo(JsonFile);
             Directory.CreateDirectory(fileInfo.Directory.FullName);
-            File.Create(JsonFile).Close();            
+            File.Create(JsonFile).Close();
         }
     }
 }
