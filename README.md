@@ -1,18 +1,18 @@
-# README #
+# EpisodeTracker #
 
-A Tv-show tracker that uses TheTVDB.com API v2. Search and add series to your trackinglist and get notified when new episodes are aired for your favourite series.
+A Tv-show tracker that uses TheTVDB.com API v2. Search and add series to your trackinglist and get notified when new episodes are aired for your favourite series. Example of automatic usage is to add the CLI to an OS scheduler to call the update-method frequently, checking for updated series, sending you notifications via email for example when new episodes have arrived.
 
-Right now only "valid" episodes are being processed. There are special-episodes and episodes without a correctly formatted air-date that will be ignored from processing.
+The library (EpisodeTracker.Core) is targeting netstandard2.0 and the CLI-part is an implementation for netcoreapp2.0
 
 Feel free to contribute!
 
 ### How to run ###
 
-To run this you need
+To run this:
 
-1. Your own api-keys at TheTVDB.com
-2. Run CLI to make a skeleton config in Data-folder
-2. Modify Data/EpisodeTracker.json with your api credentials and endpoint to the api
+1. Clone the repo
+2. ```dotnet restore``` and ```dotnet run --project EpisodeTracker.CLI```
+3. Get api-keys at TheTVDB.com and modify bin/[Debug|Release]/Data/EpisodeTracker.json with your api credentials and endpoint to the api
 
 Example of ApiCredentials-element:
 
@@ -26,10 +26,5 @@ Example of ApiCredentials-element:
   }
 ```
 
-### Examples ###
-
-A small example-application as a commandline-project is provided with a json-file storage.
-
-The cli could be wrapped in a windows-service (or just the windows scheduler perhaps) to call the update-method frequently without having to manually do much except mark episodes as seen and track new series.
-
-(At this point, if any starting arguments are given to the CLI executable, only the update-method is run without any output.)
+## CLI-usage preview
+![EpisodeTracker.CLI](assets/cli-usage.png)
