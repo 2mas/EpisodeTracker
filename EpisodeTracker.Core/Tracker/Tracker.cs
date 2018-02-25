@@ -1,11 +1,11 @@
-﻿using EpisodeTracker.Http;
-using EpisodeTracker.Notifier;
-using EpisodeTracker.Storage;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using EpisodeTracker.Http;
+using EpisodeTracker.Notifier;
+using EpisodeTracker.Storage;
 
 namespace EpisodeTracker
 {
@@ -46,17 +46,33 @@ namespace EpisodeTracker
         /// </summary>
         /// <param name="httpClient"></param>
         /// <param name="storage">Choice of storage</param>
-        /// <param name="notifiers">List of possible ways of getting notified, for example by Email</param>
         public Tracker(HttpClient httpClient, IStorage storage)
         {
             this.Storage = storage;
+            this.TmpData = new TemporaryData();
+
+            SetupNotifications();
+
+            this.ApiInteractor = new ApiInteractor(httpClient, this.Storage.GetStoreModel().ApiCredentials);
+
+            // Check for token in storage
+            if (HasValidTokenInStorage())
+            {
+                SetValidTokenFromStorage();
+            }
+        }
+
+        /// <summary>
+        /// Loads and setups user-implementations of Notifiers, defined in config
+        /// </summary>        
+        private void SetupNotifications() {
             this.Notifiers = new List<INotifier>();
 
             // Add notifiers based on user-configuration
             if (this.Storage.GetStoreModel().NotificationSettings.Configurations.Any())
             {
                 this.Storage.GetStoreModel().NotificationSettings.Configurations.ForEach(
-                    notificationConfig => 
+                    notificationConfig =>
                 {
                     if (notificationConfig.GetNotifierType().GetInterface(typeof(INotifier).Name) != null)
                     {
@@ -68,16 +84,6 @@ namespace EpisodeTracker
                 {
                     this.Notifiers.ForEach(x => x.Setup(this.Storage.GetStoreModel()));
                 }
-            }
-
-            this.TmpData = new TemporaryData();
-
-            this.ApiInteractor = new ApiInteractor(httpClient, this.Storage.GetStoreModel().ApiCredentials);
-
-            // Check for token in storage
-            if (HasValidTokenInStorage())
-            {
-                SetValidTokenFromStorage();
             }
         }
 

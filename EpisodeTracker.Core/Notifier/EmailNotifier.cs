@@ -1,12 +1,11 @@
-﻿using EpisodeTracker.Storage;
-using EpisodeTracker.Storage.NotificationConfig;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MailKit.Net.Smtp;
-using MailKit;
-using MimeKit;
 using System.Text;
+using EpisodeTracker.Storage;
+using EpisodeTracker.Storage.NotificationConfig;
+using MailKit.Net.Smtp;
+using MimeKit;
 
 namespace EpisodeTracker.Notifier
 {

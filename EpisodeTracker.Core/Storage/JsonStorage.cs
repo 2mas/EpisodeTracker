@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace EpisodeTracker.Storage
 {
@@ -79,7 +79,10 @@ namespace EpisodeTracker.Storage
         private void CreateFile()
         {
             FileInfo fileInfo = new FileInfo(JsonFile);
-            Directory.CreateDirectory(fileInfo.Directory.FullName);
+
+            if (!Directory.Exists(fileInfo.Directory.FullName))
+                Directory.CreateDirectory(fileInfo.Directory.FullName);
+
             File.Create(JsonFile).Close();
         }
     }

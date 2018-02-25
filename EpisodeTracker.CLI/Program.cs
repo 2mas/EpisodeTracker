@@ -1,6 +1,7 @@
-﻿using EpisodeTracker.CLI.Output;
-using System;
+﻿using System;
 using System.Linq;
+using CommandLine;
+using EpisodeTracker.CLI.Output;
 
 namespace EpisodeTracker.CLI
 {
@@ -42,12 +43,13 @@ namespace EpisodeTracker.CLI
             try
             {
                 Bootstrap.Initialize();
-                
+
                 // Run as service or schedule etc, no messages printed
                 if (args.Length > 0)
-                {   
+                {
                     Commands.Update();
-                } else
+                }
+                else
                 {
                     Run();
                 }
@@ -74,7 +76,7 @@ namespace EpisodeTracker.CLI
             Program.Output.WriteLine();
 
             ShowConfigSuggestions();
-            
+
             string input;
             while (!ShouldExit)
             {
@@ -109,38 +111,40 @@ namespace EpisodeTracker.CLI
         {
             Program.Output.WriteLine();
 
-            if (CommandLine.Parser.Default.ParseArguments(args, options))
-            {
-                if (!String.IsNullOrEmpty(options.Search))
-                    Commands.Search(options.Search);
+            CommandLine.Parser.Default.ParseArguments<Options>(args)
+                .WithParsed<Options>(opts =>
+                {
+                    if (!String.IsNullOrEmpty(opts.Search))
+                        Commands.Search(opts.Search);
 
-                if (options.Track > 0)
-                    Commands.Track(options.Track);
+                    if (opts.Track > 0)
+                        Commands.Track(opts.Track);
 
-                if (options.UnTrack > 0)
-                    Commands.UnTrack(options.UnTrack);
+                    if (opts.UnTrack > 0)
+                        Commands.UnTrack(opts.UnTrack);
 
-                if (options.View > 0)
-                    Commands.View(options.View);
+                    if (opts.View > 0)
+                        Commands.View(opts.View);
 
-                if (options.Episodes > 0)
-                    Commands.ViewEpisodes(options.Episodes);
+                    if (opts.Episodes > 0)
+                        Commands.ViewEpisodes(opts.Episodes);
 
-                if (!String.IsNullOrEmpty(options.List))
-                    Commands.List(options.List);
+                    if (!String.IsNullOrEmpty(opts.List))
+                        Commands.List(opts.List);
 
-                if (!String.IsNullOrEmpty(options.SeenSeries))
-                    Commands.SeenSeries(options.SeenSeries);
+                    if (!String.IsNullOrEmpty(opts.SeenSeries))
+                        Commands.SeenSeries(opts.SeenSeries);
 
-                if (options.Seen > 0)
-                    Commands.Seen(options.Seen);
+                    if (opts.Seen > 0)
+                        Commands.Seen(opts.Seen);
 
-                if (options.Update > 0)
-                    Commands.Update();
+                    if (opts.Update > 0)
+                        Commands.Update();
 
-                if (!String.IsNullOrEmpty(options.Configuration))
-                    Commands.Configuration(options.Configuration);
-            }
+                    if (!String.IsNullOrEmpty(opts.Configuration))
+                        Commands.Configuration(opts.Configuration);
+                }
+            );
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using CommandLine;
-using CommandLine.Text;
 
 namespace EpisodeTracker.CLI
 {
@@ -45,15 +44,15 @@ namespace EpisodeTracker.CLI
           HelpText = "--config list | add to view current config or add a new config-element such as a notifier.")]
         public string Configuration { get; set; }
 
-        [HelpOption]
-        public string GetUsage()
-        {
-            var help = HelpText.AutoBuild(this,
-              (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
+        //[HelpOption]
+        //public string GetUsage()
+        //{
+        //    var help = HelpText.AutoBuild(this,
+        //      (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
 
-            help.AddPostOptionsLine("To quit type q/quit\n\n");
+        //    help.AddPostOptionsLine("To quit type q/quit\n\n");
 
-            return help;
-        }
+        //    return help;
+        //}
     }
 }

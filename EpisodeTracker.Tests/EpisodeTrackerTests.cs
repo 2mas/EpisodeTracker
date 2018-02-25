@@ -1,21 +1,21 @@
-﻿using EpisodeTracker.Storage;
-using EpisodeTracker.Tests.Classes;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
+using EpisodeTracker.Storage;
+using EpisodeTracker.Tests.Classes;
+using Xunit;
 
 namespace EpisodeTracker.Tests
 {
-    [TestClass]
     public class EpisodeTrackerTests
     {
         private Tracker Tracker;
 
-        [TestInitialize]
-        public void Setup()
+        public EpisodeTrackerTests()
         {
             FakeHttpMessageHandler fakeHandler = new FakeHttpMessageHandler();
             FakeHandlerSeeder.Seed(fakeHandler);
@@ -26,90 +26,110 @@ namespace EpisodeTracker.Tests
                 );
         }
 
-        [TestMethod]
+        [Fact]
+        public void StartingWithoutConfigShouldReturnConfigurationException() {
+            FakeHttpMessageHandler fakeHandler = new FakeHttpMessageHandler();
+            FakeHandlerSeeder.Seed(fakeHandler);
+
+            Assert.Throws<Exceptions.ApiCredentialException>(() =>
+                new Tracker(
+                    new HttpClient(fakeHandler),
+                    new JsonStorage(
+                    Path.Combine(
+                        Path.Combine(
+                            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                            "Data"), 
+                            "EpisodeTracker.json"
+                        )
+                    )
+                )
+            );
+        }
+
+        [Fact]
         public async Task AfterASearchTheResultShouldBeAvailableInTemporaryDataModel()
         {
             string searchText = "Narcos";
             List<Series> result = await this.Tracker.SearchSeriesAsync(searchText);
-            Assert.AreEqual("Narcos", this.Tracker.TmpData.LatestSearch.First().Name);
+            Assert.Equal("Narcos", this.Tracker.TmpData.LatestSearch.First().Name);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task RetrievingListOfTrackedSeriesShouldGiveCorrectNumberOfItems()
         {
             this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
             await this.Tracker.Track(123);
             await this.Tracker.Track(456);
 
-            Assert.AreEqual(2, this.Tracker.GetTrackedItems().Count);
+            Assert.Equal(2, this.Tracker.GetTrackedItems().Count);
         }
 
-        [TestMethod]
+        [Fact]
         public void ViewingInfoAboutASeriesShouldGiveCorrectId()
         {
             Series series = this.Tracker.ViewSeriesInformationByIdAsync((long)282670).Result;
-            Assert.AreEqual(282670, series.Id);
+            Assert.Equal(282670, series.Id);
         }
 
-        [TestMethod]
+        [Fact]
         public void ViewingEpisodesBySeriesIdShouldGiveCorrectEpisodeCount()
         {
             List<Episode> episodes = this.Tracker.ViewEpisodesBySeriesIdAsync((long)282670).Result;
-            Assert.AreEqual(3, episodes.Count());
+            Assert.Equal(3, episodes.Count());
         }
 
-        [TestMethod]
+        [Fact]
         public void ViewingEpisodeSummaryShouldGiveCorrectNumberOfSeasonsAndEpisodes()
         {
             Series series = this.Tracker.ViewSeriesInformationByIdAsync((long)282670).Result;
-            Assert.AreEqual("1, 2", series.AiredSeasons);
-            Assert.AreEqual(3, series.AiredEpisodes);
+            Assert.Equal("1, 2", series.AiredSeasons);
+            Assert.Equal(3, series.AiredEpisodes);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AddingTrackedSeriesShouldShowUpInStoreModel()
         {
             this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
             await this.Tracker.Track(123);
-            Assert.IsTrue(this.Tracker.GetTrackedItems().Any(d => d.SeriesId == 123));
+            Assert.Contains(this.Tracker.GetTrackedItems(), d => d.SeriesId == 123);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task RemovingTrackedSeriesShouldUpdateStoreModel()
         {
             await this.Tracker.Track(123);
             this.Tracker.UnTrack(123);
-            Assert.IsFalse(this.Tracker.GetTrackedItems().Any(d => d.SeriesId == 123));
+            Assert.DoesNotContain(this.Tracker.GetTrackedItems(), d => d.SeriesId == 123);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AddingDuplicateTrackedSeriesShouldBeIgnored()
         {
             this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
             await this.Tracker.Track(123);
             await this.Tracker.Track(123);
-            Assert.IsTrue(this.Tracker.GetTrackedItems().Count(d => d.SeriesId == 123) == 1);
+            Assert.True(this.Tracker.GetTrackedItems().Count(d => d.SeriesId == 123) == 1);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task SearchForNarcosWithFakeHandlerShouldReturnOneHit()
         {
             string searchText = "Narcos";
             List<Series> result = await this.Tracker.SearchSeriesAsync(searchText);
 
-            Assert.AreEqual(1, result.Count);
+            Assert.Single(result);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task SearchForSeriesThatDoesntExistShouldGiveEmptyResult()
         {
             string searchText = "Socran";
             List<Series> result = await this.Tracker.SearchSeriesAsync(searchText);
 
-            Assert.AreEqual(0, result.Count);
+            Assert.Empty(result);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AfterRetrievingNewEpisodeInformationAboutTrackedItemTotalEpisodesUpdates()
         {
             this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
@@ -124,11 +144,11 @@ namespace EpisodeTracker.Tests
 
             var seriesWithNewEpisodes = await this.Tracker.CheckForNewEpisodesAsync();
 
-            Assert.AreEqual(2, seriesWithNewEpisodes.First().TotalAiredEpisodes - seriesWithNewEpisodes.First().TotalSeenEpisodes);
-            Assert.AreEqual(2, seriesWithNewEpisodes.Sum(x => x.UnSeenEpisodes.Count));
+            Assert.Equal(2, seriesWithNewEpisodes.First().TotalAiredEpisodes - seriesWithNewEpisodes.First().TotalSeenEpisodes);
+            Assert.Equal(2, seriesWithNewEpisodes.Sum(x => x.UnSeenEpisodes.Count));
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AfterRetrievingNewEpisodeInformationAboutTrackedItemTheNewEpisodeShouldShowUpInUnseenEpisodesInStoreModel()
         {
             this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
@@ -145,10 +165,10 @@ namespace EpisodeTracker.Tests
             this.Tracker.SendNotifications(seriesWithNewEpisodes);
             this.Tracker.UpdateTrackingPoint(seriesWithNewEpisodes);
 
-            Assert.AreEqual(282671, this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes.First().Id);
+            Assert.Equal(282671, this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes.First().Id);
         }
 
-        [TestMethod]
+        [Fact]
         public void MarkingUnseenEpisodesAsSeenShouldGiveCorrectStoreModelBack()
         {
             var unSeenEpisodes = new List<Episode>();
@@ -172,12 +192,12 @@ namespace EpisodeTracker.Tests
                 UnSeenEpisodes = unSeenEpisodes
             });
 
-            Assert.AreEqual(1, this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes.Count);
+            Assert.Single(this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes);
 
             this.Tracker.MarkEpisodesAsSeen(new long[] { 321 });
 
-            Assert.AreEqual(0, this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes.Count);
-            Assert.AreEqual(2, this.Tracker.Storage.GetStoreModel().TrackedItems.First().TotalSeenEpisodes);
+            Assert.Empty(this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes);
+            Assert.Equal(2, this.Tracker.Storage.GetStoreModel().TrackedItems.First().TotalSeenEpisodes);
         }
     }
 }

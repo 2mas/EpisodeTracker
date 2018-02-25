@@ -1,11 +1,12 @@
-﻿using EpisodeTracker.Storage;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
+using EpisodeTracker.Storage;
+using Newtonsoft.Json;
 
 namespace EpisodeTracker.Http
 {
@@ -60,7 +61,9 @@ namespace EpisodeTracker.Http
 
             response.EnsureSuccessStatusCode();
 
-            dynamic responseObject = await response.Content.ReadAsAsync<ExpandoObject>();
+            var result = await response.Content.ReadAsStringAsync();
+            dynamic responseObject = JsonConvert.DeserializeObject(result);
+
             foreach (var hit in responseObject.data)
             {
                 searchHits.Add(new Series
@@ -72,7 +75,7 @@ namespace EpisodeTracker.Http
                     Banner = hit.banner,
                     Overview = hit.overview
                 });
-            }
+            }            
 
             return searchHits;
         }
@@ -95,20 +98,22 @@ namespace EpisodeTracker.Http
 
             response.EnsureSuccessStatusCode();
 
-            dynamic responseObject = await response.Content.ReadAsAsync<ExpandoObject>();
+            var result = await response.Content.ReadAsStringAsync();
+            dynamic responseObject = JsonConvert.DeserializeObject(result);
+
             DateTime tmpDate;
 
             foreach (var episode in responseObject.data)
             {
                 // Exclude special-episodes (optional), not yet aired episodes, and faulty dates
-                if (!DateTime.TryParse(episode.firstAired, out tmpDate)
+                if (!DateTime.TryParse(episode.firstAired.ToString(), out tmpDate)
                     || tmpDate > DateTime.Now
                     || (episode.airedSeason == 0 && !includeSpecials))
                     continue;
 
                 episodes.Add(new Episode()
                 {
-                    FirstAired = Convert.ToDateTime(episode.firstAired),
+                    FirstAired = Convert.ToDateTime(episode.firstAired.ToString()),
                     Id = episode.id,
                     Number = episode.airedEpisodeNumber,
                     Overview = episode.overview,
@@ -137,7 +142,9 @@ namespace EpisodeTracker.Http
 
             response.EnsureSuccessStatusCode();
 
-            dynamic responseObject = await response.Content.ReadAsAsync<ExpandoObject>();
+            var result = await response.Content.ReadAsStringAsync();
+            dynamic responseObject = JsonConvert.DeserializeObject(result);
+
             var item = responseObject.data;
             Series series = new Series()
             {
@@ -172,10 +179,18 @@ namespace EpisodeTracker.Http
                 userkey = ApiCredentials.ApiUserkey
             };
 
-            HttpResponseMessage response = await Client.PostAsJsonAsync("login", Auth);
+            HttpResponseMessage response = await Client.PostAsync(
+                "login",
+                new StringContent(
+                    JsonConvert.SerializeObject(Auth),
+                    Encoding.UTF8, 
+                    "application/json"
+                )
+            );
             response.EnsureSuccessStatusCode();
 
-            dynamic responseObject = await response.Content.ReadAsAsync<ExpandoObject>();
+            var result = await response.Content.ReadAsStringAsync();
+            dynamic responseObject = JsonConvert.DeserializeObject(result);
 
             JwtToken token = new JwtToken();
             token.Token = responseObject.token;

@@ -1,20 +1,18 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.IO;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using EpisodeTracker.Storage;
+using System.IO;
 using EpisodeTracker.Http;
+using EpisodeTracker.Storage;
+using Newtonsoft.Json;
+using Xunit;
 
 namespace EpisodeTracker.Tests
 {
-    [TestClass]
     public class JsonStorageTests
     {
         private IStorage Storage;
 
-        [TestInitialize]
-        public void Setup()
+        public JsonStorageTests()
         {
             this.Storage = new JsonStorage(
                 Path.Combine(
@@ -23,14 +21,14 @@ namespace EpisodeTracker.Tests
                 );
         }
 
-        [TestMethod]
+        [Fact]
         public void LoadingJsonStorageShouldReturnAStoreModel()
         {
             var storeModel = this.Storage.GetStoreModel();
-            Assert.IsInstanceOfType(storeModel, typeof(StoreModel));
+            Assert.IsType<StoreModel>(storeModel);
         }
 
-        [TestMethod]
+        [Fact]
         public void SavingAStoreModelAndLoadingItBackFromJsonFileShouldGiveSameObjectBack()
         {
             StoreModel storeModel = new StoreModel();
@@ -60,7 +58,7 @@ namespace EpisodeTracker.Tests
             string jsonStoreModel = JsonConvert.SerializeObject(storeModel);
             string jsonStoreModelLoaded = JsonConvert.SerializeObject(storeModelLoaded);
 
-            Assert.AreEqual(jsonStoreModel, jsonStoreModelLoaded);
+            Assert.Equal(jsonStoreModel, jsonStoreModelLoaded);
         }
     }
 }

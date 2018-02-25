@@ -1,10 +1,9 @@
-﻿using ConsoleTables.Core;
-using System;
-using System.Linq;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using ConsoleTables;
 using EpisodeTracker.Storage;
-using EpisodeTracker;
 using EpisodeTracker.Storage.NotificationConfig;
 
 namespace EpisodeTracker.CLI
@@ -27,7 +26,7 @@ namespace EpisodeTracker.CLI
                 result.ForEach(
                         res => table.AddRow(
                             counter++,
-                            trackedItems.Any(d=>d.SeriesId == res.Id) ? "X" : "",
+                            trackedItems.Any(d => d.SeriesId == res.Id) ? "X" : "",
                             res.Id,
                             res.Name,
                             res.Status
@@ -39,7 +38,8 @@ namespace EpisodeTracker.CLI
                 Program.Output.WriteLine();
                 Program.Output.WriteLine("Use command: -t/--track {Number} to track");
                 Program.Output.WriteLine();
-            } else
+            }
+            else
             {
                 Program.Output.WriteLine("No results");
                 Program.Output.WriteLine();
@@ -136,7 +136,8 @@ namespace EpisodeTracker.CLI
                 Program.Output.WriteLine("Possible configuration-arguments: list | add {ConfigurationClass}");
                 Program.Output.WriteLine();
                 return;
-            } else
+            }
+            else
             {
                 var storeModel = Program.episodeTracker.Storage.GetStoreModel();
 
@@ -145,7 +146,7 @@ namespace EpisodeTracker.CLI
                     Program.Output.WriteLine("Listing configuration, keys and values");
                     Program.Output.WriteLine("-------------------------------------");
                     Program.Output.WriteLine();
-                    
+
                     var apiCredentials = storeModel.ApiCredentials;
 
                     Program.Output.WriteLine("# ApiCredentials");
@@ -159,14 +160,14 @@ namespace EpisodeTracker.CLI
                     var notificationConfigurations = storeModel.NotificationSettings.Configurations;
 
                     Program.Output.WriteLine("# NotificationConfigurations");
-                    
+
                     var implementations = NotificationConfigHelper.GetINotifierImplementationTypes();
 
                     string notifierConfigNames = String.Join(", ", implementations.Select(i => i.Name));
 
                     Program.Output.Write($"Available notifiers: {notifierConfigNames}. Use --config add 'notifier config name' to add one");
                     Program.Output.WriteLine();
-                    
+
                     notificationConfigurations.ForEach(config =>
                     {
                         var properties = config.GetType().GetProperties(System.Reflection.BindingFlags.Public).ToList();
@@ -176,7 +177,7 @@ namespace EpisodeTracker.CLI
                         {
                             Program.Output.WriteLine($"{p.Name}={p.GetValue(p.Name)}");
                         });
-                        
+
                         Program.Output.WriteLine();
                     });
                 }
@@ -192,9 +193,10 @@ namespace EpisodeTracker.CLI
                     {
                         Program.Output.Write($"Available notifiers: {notifierConfigNames}. Use --config add notifiername to add one");
                         Program.Output.WriteLine();
-                    } else
+                    }
+                    else
                     {
-                        var notifierConfigType = implementations.First(i => i.Name == addCommand);                        
+                        var notifierConfigType = implementations.First(i => i.Name == addCommand);
                         var configElement = Activator.CreateInstance(notifierConfigType);
 
                         if (!storeModel.NotificationSettings.Configurations.Any(c => c.GetType() == notifierConfigType))
@@ -205,7 +207,8 @@ namespace EpisodeTracker.CLI
 
                             Program.Output.Write($"{addCommand} added, please provide correct parameters in json-settings");
                             Program.Output.WriteLine();
-                        } else
+                        }
+                        else
                         {
                             Program.Output.Write($"{addCommand} already exists.");
                             Program.Output.WriteLine();
@@ -320,7 +323,7 @@ namespace EpisodeTracker.CLI
 #if DEBUG
                 var watch = System.Diagnostics.Stopwatch.StartNew();
 #endif
-                List<TrackedItem> seriesWithNewEpisodes = Program.episodeTracker.CheckForNewEpisodesAsync().Result;            
+                List<TrackedItem> seriesWithNewEpisodes = Program.episodeTracker.CheckForNewEpisodesAsync().Result;
 #if DEBUG
                 watch.Stop();
                 Program.Output.WriteLine($"Time elapsed: { watch.ElapsedMilliseconds } ms");
@@ -331,7 +334,8 @@ namespace EpisodeTracker.CLI
                     Program.episodeTracker.UpdateTrackingPoint(seriesWithNewEpisodes);
                     Program.Output.WriteLine($"{ seriesWithNewEpisodes.Count } series has { seriesWithNewEpisodes.Sum(x => x.UnSeenEpisodes.Count) } new episodes. Notifications has been sent");
                     Program.Output.WriteLine();
-                } else
+                }
+                else
                 {
                     Program.Output.WriteLine("No new episodes available");
                     Program.Output.WriteLine();
@@ -351,7 +355,8 @@ namespace EpisodeTracker.CLI
                 && Program.episodeTracker.TmpData.LatestViewById.Id == seriesId)
             {
                 series = Program.episodeTracker.TmpData.LatestViewById;
-            } else
+            }
+            else
             {
                 series = Program.episodeTracker.ViewSeriesInformationByIdAsync(seriesId).Result;
             }
@@ -377,7 +382,8 @@ namespace EpisodeTracker.CLI
                     Program.Output.WriteLine($"{name}:");
                     Program.Output.WriteLine($"{value}");
                     Program.Output.WriteLine();
-                } else if (name != "Banner")
+                }
+                else if (name != "Banner")
                 {
                     Program.Output.WriteLine($"{name}: {value}");
                 }

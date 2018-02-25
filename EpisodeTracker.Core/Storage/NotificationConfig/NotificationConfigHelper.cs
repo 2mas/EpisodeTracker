@@ -13,7 +13,7 @@ namespace EpisodeTracker.Storage.NotificationConfig
                 .SelectMany(s => s.GetTypes())
                 .Where(p => notifierConfigInterface.IsAssignableFrom(p) && !p.IsInterface).ToList();
 
-            return implementations;        
+            return implementations;
         }
     }
 }
