@@ -16,9 +16,9 @@ namespace EpisodeTracker.Http
     public class ApiInteractor
     {
         #region members
-        private static HttpClient Client;
+        private readonly HttpClient Client;
 
-        private static ApiCredentials ApiCredentials;
+        private readonly ApiCredentials ApiCredentials;
 
         /// <summary>
         /// Jwt-token validity
@@ -75,7 +75,7 @@ namespace EpisodeTracker.Http
                     Banner = hit.banner,
                     Overview = hit.overview
                 });
-            }            
+            }
 
             return searchHits;
         }
@@ -101,12 +101,11 @@ namespace EpisodeTracker.Http
             var result = await response.Content.ReadAsStringAsync();
             dynamic responseObject = JsonConvert.DeserializeObject(result);
 
-            DateTime tmpDate;
 
             foreach (var episode in responseObject.data)
             {
                 // Exclude special-episodes (optional), not yet aired episodes, and faulty dates
-                if (!DateTime.TryParse(episode.firstAired.ToString(), out tmpDate)
+                if (!DateTime.TryParse(episode.firstAired.ToString(), out DateTime tmpDate)
                     || tmpDate > DateTime.Now
                     || (episode.airedSeason == 0 && !includeSpecials))
                     continue;
@@ -183,7 +182,7 @@ namespace EpisodeTracker.Http
                 "login",
                 new StringContent(
                     JsonConvert.SerializeObject(Auth),
-                    Encoding.UTF8, 
+                    Encoding.UTF8,
                     "application/json"
                 )
             );

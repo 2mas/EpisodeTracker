@@ -18,12 +18,12 @@ namespace EpisodeTracker
         /// <summary>
         /// ApiInteractor communicates with the API through HttpClient
         /// </summary>
-        private ApiInteractor ApiInteractor;
+        private readonly ApiInteractor ApiInteractor;
 
         /// <summary>
         /// Storage for tracked series and time-limited API-token
         /// </summary>
-        public IStorage Storage;
+        public readonly IStorage Storage;
 
         /// <summary>
         /// Sends notifications when new episodes are available
@@ -39,6 +39,7 @@ namespace EpisodeTracker
         /// Holds temporary data such as previous searchresults
         /// </summary>
         public TemporaryData TmpData { get; private set; }
+
         #endregion
 
         /// <summary>
@@ -65,7 +66,8 @@ namespace EpisodeTracker
         /// <summary>
         /// Loads and setups user-implementations of Notifiers, defined in config
         /// </summary>        
-        private void SetupNotifications() {
+        private void SetupNotifications()
+        {
             this.Notifiers = new List<INotifier>();
 
             // Add notifiers based on user-configuration
@@ -95,7 +97,7 @@ namespace EpisodeTracker
         /// <returns></returns>
         public async Task<List<Series>> SearchSeriesAsync(string searchText)
         {
-            CheckTokenBeforeApiCall();
+            await CheckTokenBeforeApiCallAsync();
 
             List<Series> result = await this.ApiInteractor.SearchSeriesAsync(searchText);
             TmpData.LatestSearch = result;
@@ -110,15 +112,19 @@ namespace EpisodeTracker
         /// <returns></returns>
         public async Task<Series> ViewSeriesInformationByIdAsync(long id)
         {
-            CheckTokenBeforeApiCall();
-            Series seriesResult = await this.ApiInteractor.SearchSeriesByIdAsync(id);
-            List<Episode> episodes = await this.ApiInteractor.GetEpisodesBySeriesIdAsync(id);
+            await CheckTokenBeforeApiCallAsync();
+            var seriesTask = this.ApiInteractor.SearchSeriesByIdAsync(id);
+            var episodesTask = this.ApiInteractor.GetEpisodesBySeriesIdAsync(id);
 
-            seriesResult.AiredSeasons = String.Join(", ", episodes.Select(x => x.Season).Distinct());
-            seriesResult.AiredEpisodes = episodes.Count;
-            //await this.ApiInteractor.SetEpisodeSummaryBySeriesAsync(seriesResult);
-            TmpData.LatestViewById = seriesResult;
-            return seriesResult;
+            await Task.WhenAll(seriesTask, episodesTask);
+
+            Series series = seriesTask.Result;
+            List<Episode> episodes = episodesTask.Result;
+
+            series.AiredSeasons = String.Join(", ", episodes.Select(x => x.Season).Distinct());
+            series.AiredEpisodes = episodes.Count;
+            TmpData.LatestViewById = series;
+            return series;
         }
 
         /// <summary>
@@ -128,7 +134,7 @@ namespace EpisodeTracker
         /// <returns></returns>
         public async Task<List<Episode>> ViewEpisodesBySeriesIdAsync(long id)
         {
-            CheckTokenBeforeApiCall();
+            await CheckTokenBeforeApiCallAsync();
             List<Episode> episodesResult = await this.ApiInteractor.GetEpisodesBySeriesIdAsync(id);
             return episodesResult;
         }
@@ -144,7 +150,7 @@ namespace EpisodeTracker
             if (!trackedItems.Any())
                 return hasNewEpisodes;
 
-            CheckTokenBeforeApiCall();
+            await CheckTokenBeforeApiCallAsync();
 
             List<Tuple<TrackedItem, Task<List<Episode>>>> tasks = new List<Tuple<TrackedItem, Task<List<Episode>>>>();
 
@@ -196,7 +202,7 @@ namespace EpisodeTracker
         {
             if (!this.GetTrackedItems().Exists(d => d.SeriesId == seriesId))
             {
-                CheckTokenBeforeApiCall();
+                await CheckTokenBeforeApiCallAsync();
                 Series seriesToTrack;
 
                 if (TmpData.LatestSearch != null && TmpData.LatestSearch.Any(d => d.Id == seriesId))
@@ -295,11 +301,11 @@ namespace EpisodeTracker
         /// Is run before every API-call to make sure the token is valid.
         /// If not, gets a token from API, sets its to API and saves it to storeModel
         /// </summary>
-        private void CheckTokenBeforeApiCall()
+        private async Task CheckTokenBeforeApiCallAsync()
         {
             if (this.Token == null || !this.Token.IsValid())
             {
-                GetTokenFromAPI();
+                await GetTokenFromAPIAsync();
                 SaveStoreModel();
             }
         }
@@ -324,9 +330,11 @@ namespace EpisodeTracker
         /// </summary>
         private void SetValidTokenFromStorage()
         {
-            this.Token = new JwtToken();
-            this.Token.Token = this.Storage.GetStoreModel().Token.Token;
-            this.Token.Expiration = this.Storage.GetStoreModel().Token.Expiration;
+            this.Token = new JwtToken
+            {
+                Token = this.Storage.GetStoreModel().Token.Token,
+                Expiration = this.Storage.GetStoreModel().Token.Expiration
+            };
 
             this.ApiInteractor.AddTokenToAuthorizationHeader(this.Token);
         }
@@ -334,9 +342,9 @@ namespace EpisodeTracker
         /// <summary>
         /// Gets a token from API and sets it to the token-property of the EpisodeTracker
         /// </summary>
-        private void GetTokenFromAPI()
+        private async Task GetTokenFromAPIAsync()
         {
-            this.Token = this.ApiInteractor.GetTokenAndSetAuthorizationHeadersAsync().Result;
+            this.Token = await this.ApiInteractor.GetTokenAndSetAuthorizationHeadersAsync();
             this.Storage.GetStoreModel().Token.Token = this.Token.Token;
             this.Storage.GetStoreModel().Token.Expiration = this.Token.Expiration;
         }
