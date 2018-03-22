@@ -10,7 +10,7 @@ namespace EpisodeTracker.Tests
 {
     public class JsonStorageTests
     {
-        private IStorage Storage;
+        private readonly IStorage Storage;
 
         public JsonStorageTests()
         {
@@ -31,24 +31,25 @@ namespace EpisodeTracker.Tests
         [Fact]
         public void SavingAStoreModelAndLoadingItBackFromJsonFileShouldGiveSameObjectBack()
         {
-            StoreModel storeModel = new StoreModel();
-            storeModel.Token = new JwtToken()
+            StoreModel storeModel = new StoreModel
             {
-                Token = "testtoken",
-                Expiration = DateTime.Now.AddDays(1)
-            };
-
-            storeModel.TrackedItems = new List<TrackedItem>();
-
-            storeModel.TrackedItems.Add(
-                new TrackedItem()
+                Token = new JwtToken()
                 {
-                    TrackingPoint = DateTime.Now,
-                    SeriesId = 1,
-                    Status = "ended",
-                    Name = "Narcos"
+                    Token = "testtoken",
+                    Expiration = DateTime.Now.AddDays(1)
+                },
+
+                TrackedItems = new List<TrackedItem>()
+                {
+                    new TrackedItem()
+                    {
+                        TrackingPoint = DateTime.Now,
+                        SeriesId = 1,
+                        Status = "ended",
+                        Name = "Narcos"
+                    }
                 }
-            );
+            };
 
             this.Storage.SetStoreModel(storeModel);
             this.Storage.Save();

@@ -13,7 +13,7 @@ namespace EpisodeTracker.Tests
 {
     public class EpisodeTrackerTests
     {
-        private Tracker Tracker;
+        private readonly Tracker Tracker;
 
         public EpisodeTrackerTests()
         {
@@ -27,7 +27,8 @@ namespace EpisodeTracker.Tests
         }
 
         [Fact]
-        public void StartingWithoutConfigShouldReturnConfigurationException() {
+        public void StartingWithoutConfigShouldReturnConfigurationException()
+        {
             FakeHttpMessageHandler fakeHandler = new FakeHttpMessageHandler();
             FakeHandlerSeeder.Seed(fakeHandler);
 
@@ -38,7 +39,7 @@ namespace EpisodeTracker.Tests
                     Path.Combine(
                         Path.Combine(
                             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                            "Data"), 
+                            "Data"),
                             "EpisodeTracker.json"
                         )
                     )
@@ -50,7 +51,7 @@ namespace EpisodeTracker.Tests
         public async Task AfterASearchTheResultShouldBeAvailableInTemporaryDataModel()
         {
             string searchText = "Narcos";
-            List<Series> result = await this.Tracker.SearchSeriesAsync(searchText);
+            await this.Tracker.SearchSeriesAsync(searchText);
             Assert.Equal("Narcos", this.Tracker.TmpData.LatestSearch.First().Name);
         }
 
@@ -65,23 +66,23 @@ namespace EpisodeTracker.Tests
         }
 
         [Fact]
-        public void ViewingInfoAboutASeriesShouldGiveCorrectId()
+        public async Task ViewingInfoAboutASeriesShouldGiveCorrectId()
         {
-            Series series = this.Tracker.ViewSeriesInformationByIdAsync((long)282670).Result;
+            Series series = await this.Tracker.ViewSeriesInformationByIdAsync((long)282670);
             Assert.Equal(282670, series.Id);
         }
 
         [Fact]
-        public void ViewingEpisodesBySeriesIdShouldGiveCorrectEpisodeCount()
+        public async Task ViewingEpisodesBySeriesIdShouldGiveCorrectEpisodeCount()
         {
-            List<Episode> episodes = this.Tracker.ViewEpisodesBySeriesIdAsync((long)282670).Result;
-            Assert.Equal(3, episodes.Count());
+            List<Episode> episodes = await this.Tracker.ViewEpisodesBySeriesIdAsync((long)282670);
+            Assert.Equal(3, episodes.Count);
         }
 
         [Fact]
-        public void ViewingEpisodeSummaryShouldGiveCorrectNumberOfSeasonsAndEpisodes()
+        public async Task ViewingEpisodeSummaryShouldGiveCorrectNumberOfSeasonsAndEpisodes()
         {
-            Series series = this.Tracker.ViewSeriesInformationByIdAsync((long)282670).Result;
+            Series series = await this.Tracker.ViewSeriesInformationByIdAsync((long)282670);
             Assert.Equal("1, 2", series.AiredSeasons);
             Assert.Equal(3, series.AiredEpisodes);
         }
@@ -171,26 +172,30 @@ namespace EpisodeTracker.Tests
         [Fact]
         public void MarkingUnseenEpisodesAsSeenShouldGiveCorrectStoreModelBack()
         {
-            var unSeenEpisodes = new List<Episode>();
-            unSeenEpisodes.Add(new Episode()
+            var unSeenEpisodes = new List<Episode>
             {
-                Id = 321,
-                FirstAired = DateTime.Now,
-                Number = 1,
-                Season = 1,
-                SeasonId = 123
-            });
+                new Episode()
+                {
+                    Id = 321,
+                    FirstAired = DateTime.Now,
+                    Number = 1,
+                    Season = 1,
+                    SeasonId = 123
+                }
+            };
 
-            this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>();
-            this.Tracker.Storage.GetStoreModel().TrackedItems.Add(new TrackedItem()
+            this.Tracker.Storage.GetStoreModel().TrackedItems = new List<TrackedItem>
             {
-                SeriesId = 282670,
-                Name = "Narcos",
-                TotalSeenEpisodes = 1,
-                TrackingPoint = Convert.ToDateTime("2015-08-28"),
-                Status = "Continuing",
-                UnSeenEpisodes = unSeenEpisodes
-            });
+                new TrackedItem()
+                {
+                    SeriesId = 282670,
+                    Name = "Narcos",
+                    TotalSeenEpisodes = 1,
+                    TrackingPoint = Convert.ToDateTime("2015-08-28"),
+                    Status = "Continuing",
+                    UnSeenEpisodes = unSeenEpisodes
+                }
+            };
 
             Assert.Single(this.Tracker.Storage.GetStoreModel().TrackedItems.First().UnSeenEpisodes);
 

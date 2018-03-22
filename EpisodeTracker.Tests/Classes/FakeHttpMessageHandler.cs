@@ -15,15 +15,15 @@ namespace EpisodeTracker.Tests.Classes
             FakeResponses.Add(uri, responseMessage);
         }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+        protected async override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
         {
             if (FakeResponses.ContainsKey(request.RequestUri))
             {
-                return Task.FromResult(FakeResponses[request.RequestUri]);
+                return await Task.FromResult(FakeResponses[request.RequestUri]);
             }
             else
             {
-                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound) { RequestMessage = request });
+                return await Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound) { RequestMessage = request });
             }
         }
     }

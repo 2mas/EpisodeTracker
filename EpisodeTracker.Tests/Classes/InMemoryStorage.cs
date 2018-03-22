@@ -1,7 +1,5 @@
 ﻿using System;
 using EpisodeTracker.Storage;
-using EpisodeTracker.Storage.NotificationConfig;
-using System.Collections.Generic;
 
 namespace EpisodeTracker.Tests.Classes
 {
@@ -11,8 +9,6 @@ namespace EpisodeTracker.Tests.Classes
 
         public InMemoryStorage()
         {
-            var Recipients =  new List<string>() { "thomas.welen@gmail.com" };
-
             this.StoreModel = new StoreModel
             {
                 ApiCredentials = new ApiCredentials
@@ -21,6 +17,11 @@ namespace EpisodeTracker.Tests.Classes
                     ApiKey = "ApiKey",
                     ApiUser = "ApiUser",
                     ApiUserkey = "ApiUserKey"
+                },
+                Token = new Http.JwtToken
+                {
+                    Expiration = DateTime.Now.AddDays(1),
+                    Token = "valid"
                 }
             };
         }
