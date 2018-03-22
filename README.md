@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/2mas/EpisodeTracker/branch/master/graph/badge.svg)](https://codecov.io/gh/2mas/EpisodeTracker)
+
 # EpisodeTracker #
 
 A Tv-show tracker that uses TheTVDB.com API v2. Search and add series to your trackinglist and get notified when new episodes are aired for your favourite series. Example of automatic usage is to add the CLI to an OS scheduler to call the update-method frequently, checking for updated series, sending you notifications via email for example when new episodes have arrived.
