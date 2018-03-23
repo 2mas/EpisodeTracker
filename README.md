@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/2mas/EpisodeTracker/branch/master/graph/badge.svg)](https://codecov.io/gh/2mas/EpisodeTracker)
+[![Build status](https://ci.appveyor.com/api/projects/status/6mcryq5ft8bm36fp?svg=true)](https://ci.appveyor.com/project/2mas/episodetracker) [![codecov](https://codecov.io/gh/2mas/EpisodeTracker/branch/master/graph/badge.svg)](https://codecov.io/gh/2mas/EpisodeTracker)
 
 # EpisodeTracker #
 
