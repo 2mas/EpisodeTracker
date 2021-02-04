@@ -4,7 +4,7 @@ init:
 - cmd: git config --global core.autocrlf true
 build_script:
 - cmd: >-
-    choco install codecov
+    choco install codecov --version=1.0.1
 
     dotnet build -c:Debug -v:quiet
 after_test:
