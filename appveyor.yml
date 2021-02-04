@@ -4,12 +4,4 @@ init:
 - cmd: git config --global core.autocrlf true
 build_script:
 - cmd: >-
-#    choco install codecov --version=1.0.1
-
     dotnet build -c:Debug -v:quiet
-#after_test:
-#- cmd: >-
-#    OpenCover.Console.exe -target:"C:/Program Files/dotnet/dotnet.exe" -targetargs:"test \"EpisodeTracker.Tests\EpisodeTracker.Tests.csproj\" --configuration Debug --no-build" -filter:"+[*]* -[*.Tests*]*" -oldStyle -register:user -output:"EpisodeTracker_OpenCover.xml"
-
-
-#    codecov -f "EpisodeTracker_OpenCover.xml"
